@@ -17,7 +17,7 @@ milestone section lists exactly what is done and what is next.
 | M4: One-theme AI ingestion | ✅ Done (code) | Pipeline complete; live run pending keys (M7) |
 | M5: Student exam and practice | ✅ Done (code) | Full PT student flows; live smoke test pending keys |
 | M6: Feedback and admin | ✅ Done (code) | Thumbs, reports, admin MVP complete |
-| M7: Expand ingestion | 🔨 In progress | Blocked on live keys — runbook ready |
+| M7: Expand ingestion | ⏸ Blocked | Needs Supabase project + ANTHROPIC_API_KEY — runbook ready |
 
 ## Completed: M1 — App scaffold
 
@@ -130,3 +130,9 @@ Decisions are numbered notes in `docs/implementation/decisions/`. Add a row here
 | --- | --- |
 | 0001 | Stack versions and scaffold choices (Next 16, Tailwind 4, shadcn base-nova in M1) |
 | 0002 | Visual design system: padel court identity (palette, type, signature, motion) |
+| 0003 | Database schema beyond the brief (practice reuses exam_attempts, RLS posture, triggers) |
+| 0004 | Auth/session infrastructure (@supabase/ssr, Next 16 proxy.ts, env no-op) |
+| 0005 | Exam assembly and scope semantics (DB targets, shortfalls, snapshot-leak limitation) |
+| 0006 | Ingestion pipeline (unpdf, density-based manual split, structured outputs, caching) |
+| 0007 | Student UI (PT routes, client-safe snapshots, timer semantics, graceful degradation) |
+| 0008 | Feedback and admin (server-side report context, review queue, force-dynamic) |

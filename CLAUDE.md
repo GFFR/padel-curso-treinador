@@ -6,7 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A study dashboard that helps students prepare for the Curso de Treinador de Padel Grau I exam. It ingests course PDFs, generates multiple-choice questions with AI into a strict schema, stores them in a Supabase-backed question bank, and serves 80-question timed practice exams plus untimed theme practice.
 
-The project is **greenfield**: the root contains product/domain documentation and source PDFs; the application must be built inside the empty `app/` directory. There are no build, lint, or test commands yet — once the app is scaffolded (Next.js App Router + TypeScript + Tailwind + shadcn/ui + Supabase + Zod), document its commands here.
+The application lives in `app/` (Next.js 16 App Router, TypeScript, Tailwind 4, shadcn/ui on Base UI, Supabase, Zod, Anthropic SDK). Implementation status and per-milestone details: `docs/implementation/PLAN.md`; implementation decisions: `docs/implementation/decisions/`.
+
+## Commands (run inside `app/`)
+
+- `npm run dev` — dev server; `npm run build` + `npm start` — production
+- `npm run lint` — ESLint; `npx tsc --noEmit` — typecheck
+- `npm test` — vitest (domain logic: blueprint, scoring, assembly)
+- `npm run ingest -- --theme ED [--dry-run] [--scope presentations_only]` — ingestion
+  pipeline (dry-run needs no keys; full run needs Supabase + `ANTHROPIC_API_KEY`, see `app/.env.example`)
+
+Supabase migrations/seeds are plain SQL in `app/supabase/`; live-setup runbook in `docs/implementation/supabase-setup.md`. The app degrades gracefully without Supabase env vars (landing works, login shows a setup notice).
 
 ## Source of truth
 
