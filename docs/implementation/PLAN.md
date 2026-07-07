@@ -12,8 +12,8 @@ milestone section lists exactly what is done and what is next.
 | Milestone | Status | Notes |
 | --- | --- | --- |
 | M1: App scaffold | ✅ Done | Next.js 16 + TS + Tailwind 4 + shadcn in `app/`, PT landing page, lint+build green |
-| M2: Data and auth foundation | 🔨 In progress | Supabase config, migrations, seeds |
-| M3: Question bank without AI | ⬜ Pending | Exam assembly, scoring, tests |
+| M2: Data and auth foundation | ✅ Done | Migrations + RLS + seeds in `app/supabase/`, clients, proxy, runbook |
+| M3: Question bank without AI | 🔨 In progress | Exam assembly, scoring, tests |
 | M4: One-theme AI ingestion | ⬜ Pending | PDF extraction + structured generation |
 | M5: Student exam and practice | ⬜ Pending | OTP auth, exam UI, practice UI |
 | M6: Feedback and admin | ⬜ Pending | Thumbs, reports, admin MVP |
@@ -31,17 +31,31 @@ milestone section lists exactly what is done and what is next.
 
 Commands: `cd app && npm run dev` (dev server), `npm run build && npm start` (production).
 
-## Current Milestone: M2 — Data and auth foundation
+## Completed: M2 — Data and auth foundation
 
-Goal: Supabase env configuration, Supabase clients, phone OTP setup notes, SQL migrations for
-the full MVP schema, seed data for the six course themes and 80-question blueprint.
+- `@supabase/supabase-js` + `@supabase/ssr`; clients in `app/src/lib/supabase/`
+  (browser, server-session, service-role admin) + session refresh in `app/src/proxy.ts`
+  (Next 16 proxy, no-ops without env vars).
+- `app/.env.example` (Supabase URL/keys + `ANTHROPIC_API_KEY` for M4).
+- Migrations `app/supabase/migrations/00001_init.sql` (12 tables, triggers: profile
+  auto-create from auth.users, questions.updated_at) and `00002_rls.sql` (helpers
+  `current_student_id()` / `is_admin()`, full policy set).
+- Seed `app/supabase/seed.sql`: six themes, calendar hours, 80-question blueprint targets.
+- Runbook `docs/implementation/supabase-setup.md` (project creation, migrations, phone
+  OTP + SMS provider, test OTPs, admin role).
+- Source materials rows are NOT seeded — the M4 ingestion script creates them (upsert by
+  theme+file) so file paths and titles come from actual extraction.
 
-- [ ] Supabase JS deps + browser/server client helpers
-- [ ] `.env.example` with required variables
-- [ ] SQL migrations for all 12 tables from the brief
-- [ ] RLS policies (students read own data; admin via role)
-- [ ] Seed SQL: six course themes with hours + question targets, source_materials rows
-- [ ] Setup docs: how to create the Supabase project, enable phone OTP, run migrations
+## Current Milestone: M3 — Question bank without AI
+
+Goal: prove exam assembly, scoring, and result flow with hand-seeded questions.
+
+- [ ] Domain module: theme codes, source scopes, blueprint math (largest remainder)
+- [ ] Sample question seed (one theme) in SQL
+- [ ] Exam assembly service: blueprint selection, repeat suppression, fallback repeats,
+      attempt snapshot shape
+- [ ] Scoring: 0.25/question, 0-20 scale, pass at 9.5
+- [ ] Unit tests (vitest) for scoring + blueprint selection + assembly
 
 ## Environment / Runtime Notes
 
