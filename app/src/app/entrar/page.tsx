@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "Entrar — Padel Grau I",
 };
 
+// Reads the session cookie when Supabase is configured — never prerender.
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage() {
   const configured = isSupabaseConfigured();
   if (configured) {

@@ -45,6 +45,7 @@ export default async function ExamPage({
       : row.exam_attempt_answers;
     return {
       attemptQuestionId: row.id,
+      questionId: snapshot.questionId,
       position: row.position,
       prompt: snapshot.prompt,
       options: snapshot.options.map(({ index, text }) => ({ index, text })),

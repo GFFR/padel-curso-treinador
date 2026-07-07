@@ -1,6 +1,8 @@
 /** Client-safe question shape: no correct answer, no explanation (exam mode). */
 export interface RunnerQuestion {
   attemptQuestionId: string;
+  /** Stable question-bank id (feedback and reports key on this). */
+  questionId: string;
   position: number;
   prompt: string;
   options: { index: number; text: string }[];

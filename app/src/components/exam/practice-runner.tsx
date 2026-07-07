@@ -8,15 +8,18 @@ import { answerQuestion, type AnswerResult } from "@/lib/actions/exam-actions";
 import { cn } from "@/lib/utils";
 import { OPTION_LETTERS, type RunnerQuestion } from "./types";
 import { QuestionStatusBadge } from "./question-status-badge";
+import { FeedbackBar } from "./feedback-bar";
 
 interface Reveal extends AnswerResult {
   selectedOptionIndex: number;
 }
 
 export function PracticeRunner({
+  attemptId,
   themeName,
   questions,
 }: {
+  attemptId: string;
   themeName: string;
   questions: RunnerQuestion[];
 }) {
@@ -148,6 +151,11 @@ export function PracticeRunner({
                   ` — ${reveal.manualReference.sectionTitle}`}
               </p>
             )}
+            <FeedbackBar
+              questionId={question.questionId}
+              attemptId={attemptId}
+              attemptQuestionId={question.attemptQuestionId}
+            />
           </div>
         )}
       </div>

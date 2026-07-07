@@ -2,6 +2,11 @@ import Link from "next/link";
 
 import { requireStudent } from "@/lib/auth";
 import { LogoutButton } from "@/components/shared/logout-button";
+import { SupportBubble } from "@/components/shared/support-bubble";
+
+// Session-dependent pages must never be prerendered (a build without env vars
+// would otherwise freeze the redirect-to-login into static HTML).
+export const dynamic = "force-dynamic";
 
 export default async function StudentLayout({
   children,
@@ -37,6 +42,7 @@ export default async function StudentLayout({
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
         {children}
       </main>
+      <SupportBubble />
     </div>
   );
 }

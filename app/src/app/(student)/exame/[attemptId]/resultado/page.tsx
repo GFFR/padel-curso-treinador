@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FeedbackBar } from "@/components/exam/feedback-bar";
 import { QuestionStatusBadge } from "@/components/exam/question-status-badge";
 import { OPTION_LETTERS } from "@/components/exam/types";
 import { requireStudent } from "@/lib/auth";
@@ -182,6 +183,11 @@ export default async function ResultPage({
                     `, diapositivo ${item.snapshot.presentationAnchor.page}`}
                 </p>
               )}
+              <FeedbackBar
+                questionId={item.snapshot.questionId}
+                attemptId={attemptId}
+                attemptQuestionId={item.id}
+              />
             </div>
           </article>
         ))}

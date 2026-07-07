@@ -32,6 +32,7 @@ export default async function PracticeSessionPage({
     const snapshot = row.question_snapshot as QuestionSnapshot;
     return {
       attemptQuestionId: row.id,
+      questionId: snapshot.questionId,
       position: row.position,
       prompt: snapshot.prompt,
       options: snapshot.options.map(({ index, text }) => ({ index, text })),
@@ -46,6 +47,10 @@ export default async function PracticeSessionPage({
     : attempt.course_themes;
 
   return (
-    <PracticeRunner themeName={theme?.name ?? "Tema"} questions={questions} />
+    <PracticeRunner
+      attemptId={attemptId}
+      themeName={theme?.name ?? "Tema"}
+      questions={questions}
+    />
   );
 }

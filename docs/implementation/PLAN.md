@@ -16,8 +16,8 @@ milestone section lists exactly what is done and what is next.
 | M3: Question bank without AI | ✅ Done | Domain logic + exam service + 19 passing tests |
 | M4: One-theme AI ingestion | ✅ Done (code) | Pipeline complete; live run pending keys (M7) |
 | M5: Student exam and practice | ✅ Done (code) | Full PT student flows; live smoke test pending keys |
-| M6: Feedback and admin | 🔨 In progress | Thumbs, reports, admin MVP |
-| M7: Expand ingestion | ⬜ Pending | All six themes |
+| M6: Feedback and admin | ✅ Done (code) | Thumbs, reports, admin MVP complete |
+| M7: Expand ingestion | 🔨 In progress | Blocked on live keys — runbook ready |
 
 ## Completed: M1 — App scaffold
 
@@ -89,13 +89,30 @@ Commands: `cd app && npm run dev` (dev server), `npm run build && npm start` (pr
 - Landing page cards now link to `/entrar`. Lint/typecheck/build green; `/`,
   `/entrar` visually verified. Live OTP + exam smoke test = M7 gate. Decision 0007.
 
-## Current Milestone: M6 — Feedback and admin
+## Completed: M6 — Feedback and admin (code complete)
 
-- [ ] Thumbs up/down on questions (practice reveal + exam review), upsert per student
-- [ ] Support bubble: general message + question-context report (full payload per
-      docs/question-reporting.md)
-- [ ] Admin area `/admin`: users, attempts list + detail, averages, theme performance,
-      reported/thumbs-down questions, review queue (unreviewed/weakly_sourced/conflict)
+- `FeedbackBar` (thumbs + inline report) on practice reveals and exam review;
+  floating `SupportBubble` in the student layout for general messages.
+- Question reports capture the full snapshot context server-side (decision 0008).
+- Admin `/admin/*`: overview (students, exams, average, pass rate, per-theme bars),
+  `alunos` (per-student averages), `tentativas` (+ blueprint detail), `perguntas`
+  (review queue with approve/reject via service role, thumbs-down/report badges),
+  `reportes` (support messages with question context).
+- All session routes forced dynamic. Lint/typecheck/tests/build green. Decision 0008.
+
+## Current Milestone: M7 — Expand ingestion to all themes
+
+Everything is code-complete; M7 is an **operational** milestone requiring live keys:
+
+1. Create the Supabase project + enable phone OTP (docs/implementation/supabase-setup.md).
+2. `cp app/.env.example app/.env.local` and fill in Supabase + `ANTHROPIC_API_KEY`.
+3. Apply migrations + `seed.sql` (+ optionally `seed_sample_questions.sql` for smoke tests).
+4. Smoke-test: OTP login → practice ED (sample questions) → full exam → admin pages.
+5. `npm run ingest -- --theme ED`, review candidates in `/admin/perguntas`, tune prompt
+   if needed (bump `PROMPT_VERSION`).
+6. Repeat for DA, FCH_DOPING, FCH, TMTD, PDD (small → large). Watch PDD cost — consider
+   manual-chunk selection (decision 0006 §10).
+7. Make yourself admin (SQL in the runbook) and re-check dashboards with real data.
 
 ## Environment / Runtime Notes
 
