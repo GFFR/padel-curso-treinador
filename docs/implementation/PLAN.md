@@ -13,8 +13,8 @@ milestone section lists exactly what is done and what is next.
 | --- | --- | --- |
 | M1: App scaffold | ✅ Done | Next.js 16 + TS + Tailwind 4 + shadcn in `app/`, PT landing page, lint+build green |
 | M2: Data and auth foundation | ✅ Done | Migrations + RLS + seeds in `app/supabase/`, clients, proxy, runbook |
-| M3: Question bank without AI | 🔨 In progress | Exam assembly, scoring, tests |
-| M4: One-theme AI ingestion | ⬜ Pending | PDF extraction + structured generation |
+| M3: Question bank without AI | ✅ Done | Domain logic + exam service + 19 passing tests |
+| M4: One-theme AI ingestion | 🔨 In progress | PDF extraction + structured generation |
 | M5: Student exam and practice | ⬜ Pending | OTP auth, exam UI, practice UI |
 | M6: Feedback and admin | ⬜ Pending | Thumbs, reports, admin MVP |
 | M7: Expand ingestion | ⬜ Pending | All six themes |
@@ -46,16 +46,31 @@ Commands: `cd app && npm run dev` (dev server), `npm run build && npm start` (pr
 - Source materials rows are NOT seeded — the M4 ingestion script creates them (upsert by
   theme+file) so file paths and titles come from actual extraction.
 
-## Current Milestone: M3 — Question bank without AI
+## Completed: M3 — Question bank without AI
 
-Goal: prove exam assembly, scoring, and result flow with hand-seeded questions.
+- Pure domain modules in `app/src/lib/domain/`: `types.ts` (theme codes, scopes, exam
+  constants, `QuestionSnapshot` shape), `blueprint.ts` (largest-remainder with min-4 and
+  calendar-order tie-break), `scoring.ts` (0-20, pass 9.5), `assembly.ts` (repeat
+  suppression + shortfall), `rng.ts` (seedable mulberry32).
+- DB service `app/src/lib/services/exam-service.ts`: `createExamAttempt`,
+  `createPracticeSession`, `answerAttemptQuestion` (upsert), `submitExamAttempt`.
+  Runs under the student's session client (RLS enforced). Untested against live DB —
+  needs a Supabase project (see runbook).
+- Dev sample seed `app/supabase/seed_sample_questions.sql` (6 ED questions, fixed UUIDs).
+- 19 vitest tests green (`cd app && npm test`); lint + build green.
+- Semantics decisions in decision note 0005 (incl. known snapshot-leak MVP limitation).
 
-- [ ] Domain module: theme codes, source scopes, blueprint math (largest remainder)
-- [ ] Sample question seed (one theme) in SQL
-- [ ] Exam assembly service: blueprint selection, repeat suppression, fallback repeats,
-      attempt snapshot shape
-- [ ] Scoring: 0.25/question, 0-20 scale, pass at 9.5
-- [ ] Unit tests (vitest) for scoring + blueprint selection + assembly
+## Current Milestone: M4 — One-theme AI ingestion
+
+Goal: PDF → chunks → AI structured candidates → validated DB insert, for ED or DA.
+
+- [ ] PDF text extraction with page numbers (scripts/ingestion)
+- [ ] Material map config (file → theme, incl. FCH/antidoping split rule)
+- [ ] Zod CandidateQuestionSchema from the brief
+- [ ] AI generation via Anthropic structured output
+- [ ] Duplicate detection + quality flags
+- [ ] Insert generation_batches / questions / question_options via service role
+- [ ] Runbook for executing against live Supabase + API key
 
 ## Environment / Runtime Notes
 
