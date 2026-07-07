@@ -14,8 +14,8 @@ milestone section lists exactly what is done and what is next.
 | M1: App scaffold | ✅ Done | Next.js 16 + TS + Tailwind 4 + shadcn in `app/`, PT landing page, lint+build green |
 | M2: Data and auth foundation | ✅ Done | Migrations + RLS + seeds in `app/supabase/`, clients, proxy, runbook |
 | M3: Question bank without AI | ✅ Done | Domain logic + exam service + 19 passing tests |
-| M4: One-theme AI ingestion | 🔨 In progress | PDF extraction + structured generation |
-| M5: Student exam and practice | ⬜ Pending | OTP auth, exam UI, practice UI |
+| M4: One-theme AI ingestion | ✅ Done (code) | Pipeline complete; live run pending keys (M7) |
+| M5: Student exam and practice | 🔨 In progress | OTP auth, exam UI, practice UI |
 | M6: Feedback and admin | ⬜ Pending | Thumbs, reports, admin MVP |
 | M7: Expand ingestion | ⬜ Pending | All six themes |
 
@@ -60,17 +60,30 @@ Commands: `cd app && npm run dev` (dev server), `npm run build && npm start` (pr
 - 19 vitest tests green (`cd app && npm test`); lint + build green.
 - Semantics decisions in decision note 0005 (incl. known snapshot-leak MVP limitation).
 
-## Current Milestone: M4 — One-theme AI ingestion
+## Completed: M4 — One-theme AI ingestion (code complete)
 
-Goal: PDF → chunks → AI structured candidates → validated DB insert, for ED or DA.
+- Pipeline in `app/scripts/ingestion/` (see its README): unpdf extraction with page
+  numbers, per-slide/per-3-page chunking, material map with density-calibrated
+  FCH/antidoping split, Anthropic structured generation (`claude-opus-4-8` +
+  `messages.parse` + Zod), prompt caching of the manual corpus, duplicate detection,
+  deterministic quality-flag → status mapping, idempotent DB writes.
+- `npm run ingest -- --theme <CODE> [--dry-run] [--scope ...]`.
+- **Verified**: dry-run extraction for all six themes against the real PDFs
+  (338 presentation chunks + 107 manual chunks total). Generation + DB insert not yet
+  executed — requires `ANTHROPIC_API_KEY` and Supabase keys; that's the M7 gate.
+- Decision note 0006 records extraction, split calibration, and generation choices.
 
-- [ ] PDF text extraction with page numbers (scripts/ingestion)
-- [ ] Material map config (file → theme, incl. FCH/antidoping split rule)
-- [ ] Zod CandidateQuestionSchema from the brief
-- [ ] AI generation via Anthropic structured output
-- [ ] Duplicate detection + quality flags
-- [ ] Insert generation_batches / questions / question_options via service role
-- [ ] Runbook for executing against live Supabase + API key
+## Current Milestone: M5 — Student exam and practice
+
+Goal: phone OTP auth + full student flows in Portuguese with the padel design system.
+
+- [ ] OTP login screen (phone → code → session) + logout
+- [ ] Route protection for /app area; student dashboard
+- [ ] Start full exam (server action → createExamAttempt), 90-min countdown
+- [ ] Question screen: navigate, answer (upsert), review flagged status badge
+- [ ] Submit + expiry handling → result screen (0-20 score, pass/fail, per-theme stats)
+- [ ] Theme practice: pick theme → untimed session, immediate reveal + explanation
+- [ ] Explanation view with manual reference (and presentation anchor as context)
 
 ## Environment / Runtime Notes
 
