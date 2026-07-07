@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 const themes = [
   { code: "PDD", name: "Pedagogia e Didática do Desporto" },
@@ -16,7 +16,12 @@ export default function Home() {
         <p className="font-heading text-lg font-semibold tracking-[0.2em] uppercase">
           Padel <span className="text-court">·</span> Grau I
         </p>
-        <p className="text-xs text-muted-foreground">Componente geral</p>
+        <Link
+          href="/entrar"
+          className="text-sm font-medium text-court hover:underline"
+        >
+          Entrar
+        </Link>
       </header>
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6">
@@ -38,19 +43,16 @@ export default function Home() {
         <section aria-label="Modos de estudo" className="rise rise-2 pb-16">
           <div className="overflow-hidden rounded-xl border-2 border-court-line/90 bg-court shadow-lg">
             <div className="grid sm:grid-cols-2">
-              <div
-                aria-disabled="true"
-                className="relative border-b-2 border-court-line/90 p-8 sm:border-r-2 sm:border-b-0"
+              <Link
+                href="/entrar"
+                className="group relative border-b-2 border-court-line/90 p-8 sm:border-r-2 sm:border-b-0"
               >
                 <span
                   aria-hidden="true"
                   className="absolute inset-x-8 top-1/2 hidden border-t border-court-line/25 sm:block"
                 />
                 <div className="relative">
-                  <Badge className="bg-ball font-medium text-court-deep">
-                    Em breve
-                  </Badge>
-                  <h2 className="font-heading mt-4 text-4xl font-semibold text-court-line uppercase">
+                  <h2 className="font-heading text-4xl font-semibold text-court-line uppercase group-hover:text-ball">
                     Simular exame
                   </h2>
                   <p className="mt-2 max-w-xs text-sm text-court-line/80">
@@ -58,18 +60,15 @@ export default function Home() {
                     real.
                   </p>
                 </div>
-              </div>
+              </Link>
 
-              <div aria-disabled="true" className="relative p-8">
+              <Link href="/entrar" className="group relative p-8">
                 <span
                   aria-hidden="true"
                   className="absolute inset-x-8 top-1/2 hidden border-t border-court-line/25 sm:block"
                 />
                 <div className="relative">
-                  <Badge className="bg-ball font-medium text-court-deep">
-                    Em breve
-                  </Badge>
-                  <h2 className="font-heading mt-4 text-4xl font-semibold text-court-line uppercase">
+                  <h2 className="font-heading text-4xl font-semibold text-court-line uppercase group-hover:text-ball">
                     Praticar por tema
                   </h2>
                   <p className="mt-2 max-w-xs text-sm text-court-line/80">
@@ -77,7 +76,7 @@ export default function Home() {
                     explicação imediatas.
                   </p>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </section>

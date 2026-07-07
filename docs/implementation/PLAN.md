@@ -15,8 +15,8 @@ milestone section lists exactly what is done and what is next.
 | M2: Data and auth foundation | ✅ Done | Migrations + RLS + seeds in `app/supabase/`, clients, proxy, runbook |
 | M3: Question bank without AI | ✅ Done | Domain logic + exam service + 19 passing tests |
 | M4: One-theme AI ingestion | ✅ Done (code) | Pipeline complete; live run pending keys (M7) |
-| M5: Student exam and practice | 🔨 In progress | OTP auth, exam UI, practice UI |
-| M6: Feedback and admin | ⬜ Pending | Thumbs, reports, admin MVP |
+| M5: Student exam and practice | ✅ Done (code) | Full PT student flows; live smoke test pending keys |
+| M6: Feedback and admin | 🔨 In progress | Thumbs, reports, admin MVP |
 | M7: Expand ingestion | ⬜ Pending | All six themes |
 
 ## Completed: M1 — App scaffold
@@ -73,17 +73,29 @@ Commands: `cd app && npm run dev` (dev server), `npm run build && npm start` (pr
   executed — requires `ANTHROPIC_API_KEY` and Supabase keys; that's the M7 gate.
 - Decision note 0006 records extraction, split calibration, and generation choices.
 
-## Current Milestone: M5 — Student exam and practice
+## Completed: M5 — Student exam and practice (code complete)
 
-Goal: phone OTP auth + full student flows in Portuguese with the padel design system.
+- OTP login (`/entrar`, phone → SMS code, +351 normalization), logout, auth-gated
+  `(student)` route group.
+- Dashboard `/painel`: court-styled mode chooser, recent attempts with scores/badges.
+- Full exam `/exame/[id]`: 90-min countdown with auto-submit (client + server-side
+  expiry closing), question navigation grid, editable answers, confirm-submit.
+- Result `/exame/[id]/resultado`: 0-20 scoreboard, pass/fail, per-theme stats, full
+  review with explanations + manual references + presentation anchors.
+- Practice `/praticar` → `/praticar/[id]`: theme cards with availability, untimed
+  10-question sessions, immediate reveal with per-option justifications, session recap.
+- Correct answers/explanations stripped from client during open exams; unreviewed
+  questions visibly badged (ADR 0004). Graceful no-Supabase degradation.
+- Landing page cards now link to `/entrar`. Lint/typecheck/build green; `/`,
+  `/entrar` visually verified. Live OTP + exam smoke test = M7 gate. Decision 0007.
 
-- [ ] OTP login screen (phone → code → session) + logout
-- [ ] Route protection for /app area; student dashboard
-- [ ] Start full exam (server action → createExamAttempt), 90-min countdown
-- [ ] Question screen: navigate, answer (upsert), review flagged status badge
-- [ ] Submit + expiry handling → result screen (0-20 score, pass/fail, per-theme stats)
-- [ ] Theme practice: pick theme → untimed session, immediate reveal + explanation
-- [ ] Explanation view with manual reference (and presentation anchor as context)
+## Current Milestone: M6 — Feedback and admin
+
+- [ ] Thumbs up/down on questions (practice reveal + exam review), upsert per student
+- [ ] Support bubble: general message + question-context report (full payload per
+      docs/question-reporting.md)
+- [ ] Admin area `/admin`: users, attempts list + detail, averages, theme performance,
+      reported/thumbs-down questions, review queue (unreviewed/weakly_sourced/conflict)
 
 ## Environment / Runtime Notes
 
