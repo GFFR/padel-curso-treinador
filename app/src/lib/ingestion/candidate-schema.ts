@@ -39,6 +39,7 @@ export const CandidateQuestionSchema = z.object({
       "source_conflict",
       "uses_all_of_above",
       "uses_none_of_above",
+      "weak_anchor_grounding",
     ]),
   ),
 });

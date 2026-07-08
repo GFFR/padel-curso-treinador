@@ -6,17 +6,19 @@ import {
   type CandidateQuestion,
 } from "@/lib/ingestion/candidate-schema";
 import type { SourceScope, ThemeCode } from "@/lib/domain/types";
-import type { ExtractedChunk } from "./extract";
+import type { ExtractedChunk, TopicAnchor } from "./extract";
 
 export const GENERATION_MODEL = "claude-opus-4-8";
-export const PROMPT_VERSION = "v1";
+export const PROMPT_VERSION = "v2";
 
-/** Presentation chunks fed per generation call. */
-const ANCHORS_PER_CALL = 6;
-/** Questions requested per generation call. */
-const QUESTIONS_PER_CALL = 6;
+const QUESTION_ANGLES = [
+  "definição ou conceito-chave do slide",
+  "cenário prático de treinador de Grau I",
+  "afirmação correta/incorreta sobre o conteúdo do slide",
+  "aplicação ou dilema ético/desportivo relacionado com o slide",
+];
 
-function renderChunk(chunk: ExtractedChunk): string {
+function renderChunk(chunk: ExtractedChunk | TopicAnchor): string {
   const pages =
     chunk.pageStart === chunk.pageEnd
       ? `página ${chunk.pageStart}`
@@ -25,51 +27,60 @@ function renderChunk(chunk: ExtractedChunk): string {
 }
 
 /**
- * The AI prompt contract from the implementation brief: Portuguese exam-style
- * questions anchored in presentations, explained by manual references, with
- * quality flags instead of invented citations.
- *
- * Built as two content blocks: a stable prefix (rules + full manual corpus,
- * identical across all anchor batches of a theme, marked with cache_control so
- * successive calls read it from the prompt cache) and a volatile suffix (the
- * anchor slides of this batch).
+ * Prompt v2: presentation-first — the question must be answerable from the
+ * anchor alone; manual excerpts only support the explanation.
  */
-function buildPromptBlocks(params: {
+export function buildPromptBlocks(params: {
   themeCode: ThemeCode;
   themeName: string;
   sourceScope: SourceScope;
-  anchors: ExtractedChunk[];
+  anchor: TopicAnchor;
   manualChunks: ExtractedChunk[];
   questionCount: number;
+  existingPrompts: string[];
 }): Anthropic.ContentBlockParam[] {
   const manualSection =
     params.manualChunks.length > 0
-      ? `Excertos do manual de curso (para justificar as respostas):\n\n${params.manualChunks.map(renderChunk).join("\n\n")}`
-      : "(Não há excertos de manual disponíveis nesta execução.)";
+      ? `Excertos do manual de curso (APENAS para enriquecer a explicação — NÃO uses isto como fonte da pergunta se não estiver no slide):\n\n${params.manualChunks.map(renderChunk).join("\n\n")}`
+      : "(Sem excertos de manual para esta âncora.)";
+
+  const angles = QUESTION_ANGLES.slice(0, params.questionCount)
+    .map((angle, i) => `${i + 1}. ${angle}`)
+    .join("\n");
+
+  const avoidSection =
+    params.existingPrompts.length > 0
+      ? `\nPerguntas que JÁ EXISTEM para este slide (NÃO repitas o mesmo conceito nem formulação):\n${params.existingPrompts.map((p) => `- ${p}`).join("\n")}\n`
+      : "";
 
   const stablePrefix = `Estás a criar perguntas de escolha múltipla para preparar estudantes para o exame do Curso de Treinador de Padel Grau I (componente geral), tema "${params.themeName}" (código ${params.themeCode}).
 
-Regras para todas as perguntas:
+Regras OBRIGATÓRIAS (prompt v2 — presentation-first):
 
 - Escreve tudo em português europeu.
 - Cada pergunta é de escolha múltipla com exatamente quatro opções e uma só correta.
-- Usa um slide da apresentação como "presentationAnchor" (ficheiro + página + excerto literal curto) — é a razão pela qual a pergunta pertence ao corpus do exame.
-- Usa o manual como "manualReference" para justificar a resposta correta, com página/secção quando identificável. Se não encontrares apoio no manual, define manualReference como null e adiciona a flag "weak_manual_reference" — nunca inventes citações.
-- Se a apresentação e o manual parecerem contradizer-se, adiciona a flag "source_conflict" em vez de resolveres o conflito silenciosamente.
-- Prefere perguntas com elevada probabilidade de sair no exame real (conceitos centrais, definições, classificações, regras).
-- Os distratores devem ser plausíveis (erros comuns, conceitos confundíveis), nunca absurdos.
-- Usa "todas as anteriores" ou "nenhuma das anteriores" com moderação; nesses casos preenche "justification" em TODAS as opções e adiciona a flag correspondente ("uses_all_of_above" / "uses_none_of_above").
-- "explanation" é uma justificação curta da resposta correta, idealmente apoiada no manual.
-- Define themeCode="${params.themeCode}" e sourceScope="${params.sourceScope}" em todas as perguntas.
-- Devolve apenas dados estruturados conforme o schema.
+- A pergunta TEM DE ser respondível APENAS com o conteúdo do slide de apresentação abaixo — o aluno viu isto na aula.
+- PROIBIDO perguntar sobre conteúdo que só apareça no manual e não no slide.
+- O manual serve SÓ para enriquecer a "explanation" e "manualReference" — nunca como origem do enunciado.
+- Usa o slide como "presentationAnchor" (ficheiro + página + excerto literal curto). A página deve ser ${params.anchor.pageStart}${params.anchor.pageEnd !== params.anchor.pageStart ? ` (intervalo ${params.anchor.pageStart}-${params.anchor.pageEnd})` : ""}.
+- Tom: prático, orientado para o treinador de Grau I (responsabilidades, dilemas, fair play, conduta) — NÃO estilo manual académico (filosofia, estatísticas, correntes éticas) salvo se o slide o mencionar.
+- Cada uma das ${params.questionCount} perguntas deve testar um ângulo DIFERENTE:
+${angles}
+- Os distratores devem ser plausíveis, nunca absurdos.
+- Usa "todas as anteriores" ou "nenhuma das anteriores" com moderação; nesses casos preenche "justification" em TODAS as opções e adiciona a flag correspondente.
+- Se não encontrares apoio no manual para a explicação, manualReference=null e flag "weak_manual_reference".
+- Se apresentação e manual contradizerem-se, flag "source_conflict".
+- Define themeCode="${params.themeCode}" e sourceScope="${params.sourceScope}".
+- Devolve apenas dados estruturados conforme o schema.`;
 
-${manualSection}`;
+  const volatileSuffix = `${avoidSection}
+Slide de apresentação (ÚNICA fonte do enunciado e da resposta correta):
 
-  const volatileSuffix = `Slides das apresentações das aulas para esta execução (a âncora de cada pergunta — indicam a matéria com maior ênfase no exame):
+${renderChunk(params.anchor)}
 
-${params.anchors.map(renderChunk).join("\n\n")}
+${manualSection}
 
-Gera exatamente ${params.questionCount} perguntas ancoradas nestes slides.`;
+Gera exatamente ${params.questionCount} perguntas DISTINTAS ancoradas neste slide/tópico.`;
 
   return [
     {
@@ -87,14 +98,16 @@ export interface GenerationCallResult {
   model: string;
 }
 
-/** One structured-output generation call. Throws if the SDK cannot parse. */
+/** One structured-output generation call for a single topic anchor. */
 export async function generateCandidates(params: {
   client: Anthropic;
   themeCode: ThemeCode;
   themeName: string;
   sourceScope: SourceScope;
-  anchors: ExtractedChunk[];
+  anchor: TopicAnchor;
   manualChunks: ExtractedChunk[];
+  questionCount: number;
+  existingPrompts: string[];
 }): Promise<GenerationCallResult> {
   const response = await params.client.messages.parse({
     model: GENERATION_MODEL,
@@ -107,9 +120,10 @@ export async function generateCandidates(params: {
           themeCode: params.themeCode,
           themeName: params.themeName,
           sourceScope: params.sourceScope,
-          anchors: params.anchors,
+          anchor: params.anchor,
           manualChunks: params.manualChunks,
-          questionCount: QUESTIONS_PER_CALL,
+          questionCount: params.questionCount,
+          existingPrompts: params.existingPrompts,
         }),
       },
     ],
@@ -127,11 +141,7 @@ export async function generateCandidates(params: {
   return { candidates: parsed.questions, rawText, model: response.model };
 }
 
-/** Splits anchor chunks into batches for successive generation calls. */
-export function batchAnchors(anchors: ExtractedChunk[]): ExtractedChunk[][] {
-  const batches: ExtractedChunk[][] = [];
-  for (let i = 0; i < anchors.length; i += ANCHORS_PER_CALL) {
-    batches.push(anchors.slice(i, i + ANCHORS_PER_CALL));
-  }
-  return batches;
+/** Default quota per anchor by theme size. */
+export function defaultQuestionsPerAnchor(themeCode: ThemeCode): number {
+  return themeCode === "PDD" || themeCode === "TMTD" ? 3 : 4;
 }

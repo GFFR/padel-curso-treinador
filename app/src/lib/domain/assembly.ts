@@ -7,6 +7,8 @@ export interface SelectableQuestion {
   themeId: string;
   /** How many times this student has already been served this question. */
   seenCount: number;
+  /** `${materialId}:${page}` when anchored; null otherwise. */
+  anchorKey: string | null;
 }
 
 export interface ThemeSelection {
@@ -24,13 +26,51 @@ export interface ExamSelection {
   perTheme: ThemeSelection[];
 }
 
+function compareBySeenCount(a: SelectableQuestion, b: SelectableQuestion): number {
+  return a.seenCount - b.seenCount;
+}
+
 /**
- * Picks questions for an attempt following the blueprint with repeat
- * suppression (ADR 0005): least-seen questions first, random order within the
- * same exposure level. Questions the student has seen before are the fallback
- * when a theme lacks enough unseen ones; if the whole theme bank is smaller
- * than its target the attempt simply carries fewer questions for that theme
- * (recorded as shortfall — a question is never duplicated inside one attempt).
+ * Picks up to `target` questions from a theme pool with anchor spread first,
+ * then least-seen fallback (ADR 0005). Never duplicates a question within one
+ * attempt.
+ */
+export function selectFromThemePool(
+  pool: SelectableQuestion[],
+  target: number,
+  rng: Rng,
+): string[] {
+  if (target <= 0 || pool.length === 0) return [];
+
+  const shuffled = shuffle([...pool], rng);
+  const sorted = [...shuffled].sort(compareBySeenCount);
+  const selectedIds = new Set<string>();
+  const usedAnchors = new Set<string>();
+  const selected: string[] = [];
+
+  // Phase 1: at most one question per distinct anchor (least-seen first).
+  for (const question of sorted) {
+    if (selected.length >= target) break;
+    if (!question.anchorKey || usedAnchors.has(question.anchorKey)) continue;
+    selected.push(question.questionId);
+    selectedIds.add(question.questionId);
+    usedAnchors.add(question.anchorKey);
+  }
+
+  // Phase 2: fill remainder by least-seen.
+  for (const question of sorted) {
+    if (selected.length >= target) break;
+    if (selectedIds.has(question.questionId)) continue;
+    selected.push(question.questionId);
+    selectedIds.add(question.questionId);
+  }
+
+  return selected;
+}
+
+/**
+ * Picks questions for an attempt following the blueprint with anchor spread
+ * and repeat suppression (ADR 0005).
  */
 export function selectExamQuestions(
   blueprint: BlueprintEntry[],
@@ -46,12 +86,7 @@ export function selectExamQuestions(
 
   const perTheme: ThemeSelection[] = blueprint.map((entry) => {
     const available = byTheme.get(entry.themeId) ?? [];
-    // Shuffle first so ordering inside each seenCount level is random, then
-    // stable-sort by exposure so least-seen questions win.
-    const pool = shuffle([...available], rng).sort(
-      (a, b) => a.seenCount - b.seenCount,
-    );
-    const selected = pool.slice(0, entry.target).map((q) => q.questionId);
+    const selected = selectFromThemePool(available, entry.target, rng);
     return {
       themeId: entry.themeId,
       code: entry.code,

@@ -10,7 +10,7 @@ The pipeline should:
 - Extract presentation anchors and manual references
 - Use AI to generate candidate questions from presentation anchors when possible
 - Ask AI to return candidate questions in a strict structured output schema
-- Match each candidate question to a manual reference for explanation
+- Match each candidate question to a manual reference for explanation (v2: matched excerpts only; manual never sources the question stem)
 - Validate structured output before inserting anything into the database
 - Flag weakly sourced questions and source conflicts for admin attention
 - Store generation batches in the question bank

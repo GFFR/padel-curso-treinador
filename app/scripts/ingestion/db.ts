@@ -6,6 +6,8 @@ import {
 import type { CandidateQuestion } from "@/lib/ingestion/candidate-schema";
 import type { SourceScope, ThemeCode } from "@/lib/domain/types";
 import type { ExtractedChunk } from "./extract";
+import { validateCandidateGrounding } from "./validate-candidate";
+import type { TopicAnchor } from "./extract";
 
 /** Service-role client for pipeline scripts (bypasses RLS; never in browser). */
 export function createServiceClient(): SupabaseClient {
@@ -29,6 +31,21 @@ export async function fetchThemes(supabase: SupabaseClient) {
   return new Map<ThemeCode, { id: string; name: string }>(
     (data ?? []).map((t) => [t.code as ThemeCode, { id: t.id, name: t.name }]),
   );
+}
+
+export async function fetchBankSetIdByCode(
+  supabase: SupabaseClient,
+  code: string,
+): Promise<string> {
+  const { data, error } = await supabase
+    .from("question_bank_sets")
+    .select("id")
+    .eq("code", code)
+    .single();
+  if (error || !data) {
+    throw new Error(`Unknown bank set "${code}": ${error?.message}`);
+  }
+  return data.id;
 }
 
 /** Upserts a source material row and returns its id (unique per theme+file). */
@@ -133,42 +150,112 @@ export function normalizePrompt(prompt: string): string {
   return prompt
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
+export interface ExistingPromptsResult {
+  normalized: Set<string>;
+  raw: string[];
+}
+
 export async function fetchExistingPrompts(
   supabase: SupabaseClient,
-  themeId: string,
-): Promise<Set<string>> {
-  const { data, error } = await supabase
+  params: {
+    themeId: string;
+    bankSetId: string;
+    anchorMaterialId?: string | null;
+    anchorPage?: number | null;
+  },
+): Promise<ExistingPromptsResult> {
+  let query = supabase
     .from("questions")
     .select("prompt")
-    .eq("theme_id", themeId);
+    .eq("theme_id", params.themeId)
+    .eq("bank_set_id", params.bankSetId);
+
+  if (params.anchorMaterialId && params.anchorPage != null) {
+    query = query
+      .eq("presentation_anchor_material_id", params.anchorMaterialId)
+      .eq("presentation_anchor_page", params.anchorPage);
+  }
+
+  const { data, error } = await query;
   if (error) throw new Error(`Failed to load existing prompts: ${error.message}`);
-  return new Set((data ?? []).map((row) => normalizePrompt(row.prompt)));
+  const raw = (data ?? []).map((row) => row.prompt);
+  return {
+    raw,
+    normalized: new Set(raw.map((p) => normalizePrompt(p))),
+  };
+}
+
+export interface AnchorCoverageRow {
+  materialId: string;
+  fileName: string;
+  page: number;
+  count: number;
+}
+
+export async function fetchAnchorCoverage(
+  supabase: SupabaseClient,
+  themeId: string,
+  bankSetId: string,
+): Promise<AnchorCoverageRow[]> {
+  const { data, error } = await supabase
+    .from("questions")
+    .select(
+      "presentation_anchor_material_id, presentation_anchor_page, presentation_anchor:source_materials!questions_presentation_anchor_material_id_fkey ( file_name )",
+    )
+    .eq("theme_id", themeId)
+    .eq("bank_set_id", bankSetId)
+    .not("presentation_anchor_material_id", "is", null)
+    .not("presentation_anchor_page", "is", null);
+
+  if (error) throw new Error(`Failed to load anchor coverage: ${error.message}`);
+
+  const counts = new Map<string, AnchorCoverageRow>();
+  for (const row of data ?? []) {
+    const materialId = row.presentation_anchor_material_id as string;
+    const page = row.presentation_anchor_page as number;
+    const key = `${materialId}:${page}`;
+    const material = Array.isArray(row.presentation_anchor)
+      ? row.presentation_anchor[0]
+      : row.presentation_anchor;
+    const existing = counts.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      counts.set(key, {
+        materialId,
+        fileName: material?.file_name ?? "?",
+        page,
+        count: 1,
+      });
+    }
+  }
+  return [...counts.values()].sort((a, b) => a.page - b.page);
 }
 
 export interface InsertResult {
   inserted: number;
   duplicates: number;
   unresolvedAnchors: number;
+  rejectedGrounding: number;
 }
 
 /**
  * Inserts validated candidates as unreviewed/flagged questions with options.
- * Deterministic code owns flags and persistence (ADR 0007): weak manual
- * references and source conflicts get quality statuses, anchors resolve to
- * material ids by file name.
  */
 export async function insertCandidates(
   supabase: SupabaseClient,
   params: {
     batchId: string;
     themeId: string;
+    bankSetId: string;
     sourceScope: SourceScope;
+    anchor: TopicAnchor;
     candidates: CandidateQuestion[];
     materialIdByFile: Map<string, string>;
     existingPrompts: Set<string>;
@@ -177,6 +264,10 @@ export async function insertCandidates(
   let inserted = 0;
   let duplicates = 0;
   let unresolvedAnchors = 0;
+  let rejectedGrounding = 0;
+
+  const anchorMaterialId =
+    params.materialIdByFile.get(params.anchor.fileName) ?? null;
 
   for (const candidate of params.candidates) {
     const normalized = normalizePrompt(candidate.prompt);
@@ -185,8 +276,12 @@ export async function insertCandidates(
       continue;
     }
 
-    const anchorMaterialId =
-      params.materialIdByFile.get(candidate.presentationAnchor.fileName) ?? null;
+    const groundingReason = validateCandidateGrounding(candidate, params.anchor);
+    if (groundingReason) {
+      rejectedGrounding += 1;
+      continue;
+    }
+
     if (!anchorMaterialId) unresolvedAnchors += 1;
 
     const manualMaterialId = candidate.manualReference
@@ -195,7 +290,6 @@ export async function insertCandidates(
 
     const flags = [...candidate.qualityFlags];
     if (candidate.manualReference && !manualMaterialId) {
-      // Reference to a file we don't know: keep the question but flag it.
       if (!flags.includes("weak_manual_reference")) {
         flags.push("weak_manual_reference");
       }
@@ -203,7 +297,9 @@ export async function insertCandidates(
 
     const status = flags.includes("source_conflict")
       ? "source_conflict"
-      : flags.includes("weak_manual_reference") || !candidate.manualReference
+      : flags.includes("weak_manual_reference") ||
+          flags.includes("weak_anchor_grounding") ||
+          !candidate.manualReference
         ? "weakly_sourced"
         : "unreviewed";
 
@@ -211,6 +307,7 @@ export async function insertCandidates(
       .from("questions")
       .insert({
         theme_id: params.themeId,
+        bank_set_id: params.bankSetId,
         generation_batch_id: params.batchId,
         source_scope: params.sourceScope,
         prompt: candidate.prompt,
@@ -218,7 +315,7 @@ export async function insertCandidates(
         explanation: candidate.explanation,
         status,
         presentation_anchor_material_id: anchorMaterialId,
-        presentation_anchor_page: candidate.presentationAnchor.page,
+        presentation_anchor_page: params.anchor.pageStart,
         manual_reference_material_id: manualMaterialId,
         manual_reference_page: candidate.manualReference?.page ?? null,
         manual_reference_section: candidate.manualReference?.sectionTitle ?? null,
@@ -246,5 +343,5 @@ export async function insertCandidates(
     inserted += 1;
   }
 
-  return { inserted, duplicates, unresolvedAnchors };
+  return { inserted, duplicates, unresolvedAnchors, rejectedGrounding };
 }

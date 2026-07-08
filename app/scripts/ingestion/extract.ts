@@ -55,7 +55,7 @@ export async function extractMaterialChunks(
 
   if (entry.kind === "presentation") {
     pages.forEach((content, index) => {
-      if (content.length < MIN_PAGE_CHARS) return;
+      if (content.length < 10) return;
       chunks.push({
         themeCode: entry.themeCode,
         kind: entry.kind,
@@ -95,3 +95,65 @@ export async function extractMaterialChunks(
   }
   return chunks;
 }
+
+export type TopicAnchor = ExtractedChunk;
+
+/** True when a slide is title-only or too short to anchor alone. */
+export function isSparseSlideContent(content: string): boolean {
+  const trimmed = content.trim();
+  if (trimmed.length < MIN_PAGE_CHARS) return true;
+  if (trimmed.length < 100 && trimmed === trimmed.toUpperCase()) return true;
+  return false;
+}
+
+/**
+ * Merges consecutive sparse slides into the next content slide so generation
+ * anchors reflect classroom topics rather than isolated titles.
+ */
+export function mergeTopicAnchors(chunks: ExtractedChunk[]): TopicAnchor[] {
+  const presentationChunks = chunks.filter((c) => c.kind === "presentation");
+  const result: TopicAnchor[] = [];
+  let prefix = "";
+  let prefixPageStart: number | null = null;
+  let template: ExtractedChunk | null = null;
+
+  const flushPrefixAsAnchor = () => {
+    if (!prefix || prefixPageStart === null || !template) return;
+    if (prefix.length < MIN_PAGE_CHARS) {
+      prefix = "";
+      prefixPageStart = null;
+      return;
+    }
+    result.push({
+      ...template,
+      pageStart: prefixPageStart,
+      pageEnd: prefixPageStart,
+      content: prefix,
+    });
+    prefix = "";
+    prefixPageStart = null;
+  };
+
+  for (const chunk of presentationChunks) {
+    template = chunk;
+    if (isSparseSlideContent(chunk.content)) {
+      if (prefixPageStart === null) prefixPageStart = chunk.pageStart;
+      prefix = prefix ? `${prefix}\n\n${chunk.content}` : chunk.content;
+      continue;
+    }
+    const pageStart = prefixPageStart ?? chunk.pageStart;
+    result.push({
+      ...chunk,
+      pageStart,
+      pageEnd: chunk.pageEnd,
+      content: prefix ? `${prefix}\n\n${chunk.content}` : chunk.content,
+    });
+    prefix = "";
+    prefixPageStart = null;
+  }
+
+  flushPrefixAsAnchor();
+  return result;
+}
+
+export { MIN_PAGE_CHARS };

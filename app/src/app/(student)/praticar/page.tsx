@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { requireStudent } from "@/lib/auth";
 import { startPractice } from "@/lib/actions/exam-actions";
+import { fetchActiveQuestionCountsByTheme } from "@/lib/services/bank-set-service";
 
 export const metadata: Metadata = {
   title: "Praticar por tema — Padel Grau I",
@@ -11,18 +12,13 @@ export const metadata: Metadata = {
 export default async function PracticePage() {
   const { supabase } = await requireStudent();
 
-  const [{ data: themes }, { data: bank }] = await Promise.all([
+  const [{ data: themes }, countByTheme] = await Promise.all([
     supabase
       .from("course_themes")
       .select("id, code, name, calendar_hours, exam_question_target")
       .order("sort_order"),
-    supabase.from("questions").select("theme_id"),
+    fetchActiveQuestionCountsByTheme(supabase),
   ]);
-
-  const countByTheme = new Map<string, number>();
-  for (const row of bank ?? []) {
-    countByTheme.set(row.theme_id, (countByTheme.get(row.theme_id) ?? 0) + 1);
-  }
 
   return (
     <div className="space-y-8">

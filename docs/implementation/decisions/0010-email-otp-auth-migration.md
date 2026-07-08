@@ -106,6 +106,35 @@ disposable test address):
 - Requires the calling origin to be in Supabase's **Redirect URLs** allowlist (runbook
   §3c) or Supabase silently ignores `emailRedirectTo` and falls back to Site URL.
 
+### Fourth issue: single quotes inside `style="..."` break Go's html/template
+
+Every first-time signup started failing with a generic `500`/empty-body error right
+after the templates were updated with the link. Diagnosed via Supabase's **Auth Logs**
+(dashboard → Logs), which surfaced the real error hidden behind the generic client-side
+message:
+
+```
+html/template:...templates/confirmation: ends in a non-text context:
+{stateCSS delimDoubleQuote urlPartNone jsCtxRegexp [] attrStyle elementNone <nil>}
+```
+
+Supabase renders auth email templates with Go's context-aware `html/template` escaper,
+which tracks state (`stateCSS`, `attrStyle`, ...) while parsing quoted attribute values.
+Single-quoted CSS values (`font-family: ..., 'Segoe UI', ...`) nested inside a
+double-quoted `style="..."` HTML attribute confuse that state machine — the template
+fails to *compile* server-side, so every send fails identically, not intermittently.
+Isolated by testing the same never-used-address pattern against the already-registered
+`goncaloramalho88@gmail.com` (still worked — Magic Link template, same bug present but
+apparently not yet triggered) versus a fresh alias (failed every time — Confirm signup
+template). Fix: drop the quotes around multi-word font names in both templates
+(`'Segoe UI'` → `Segoe UI`, `'SF Mono'` → `SF Mono`) — universally tolerated by mail
+clients, and removes the nested-quote hazard entirely.
+
+**Takeaway for future template edits**: never put single or double quotes inside a
+`style="..."` attribute value in a Supabase email template. Check Auth Logs first for
+any "Error sending confirmation email" — the client-side error is always a generic
+empty 500 with no diagnostic value.
+
 ## Left alone
 
 - The Phone/Twilio provider in Supabase Auth is not disabled — harmless to leave

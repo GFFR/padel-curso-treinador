@@ -5,6 +5,8 @@ import {
   selectExamQuestions,
   type SelectableQuestion,
 } from "@/lib/domain/assembly";
+import { buildActiveBankSetByTheme } from "@/lib/domain/bank-sets";
+import { fetchBankSetActivations } from "@/lib/services/bank-set-service";
 import { permuteOptions } from "@/lib/domain/options";
 import { scoreExam } from "@/lib/domain/scoring";
 import { shuffle, type Rng } from "@/lib/domain/rng";
@@ -20,6 +22,7 @@ import {
 interface BankQuestionRow {
   id: string;
   theme_id: string;
+  bank_set_id: string;
   source_scope: SourceScope;
   prompt: string;
   correct_option_index: number;
@@ -43,7 +46,7 @@ interface BankQuestionRow {
 }
 
 const QUESTION_SELECT = `
-  id, theme_id, source_scope, prompt, correct_option_index, explanation, status,
+  id, theme_id, bank_set_id, source_scope, prompt, correct_option_index, explanation, status,
   presentation_anchor_material_id, presentation_anchor_page,
   manual_reference_material_id, manual_reference_page, manual_reference_section,
   question_options ( option_index, text, justification ),
@@ -108,6 +111,14 @@ function toSnapshot(
  * serves only questions generated from presentations; "full_materials" serves
  * the whole bank (see decision 0005).
  */
+function toAnchorKey(
+  materialId: string | null,
+  page: number | null,
+): string | null {
+  if (!materialId || page == null) return null;
+  return `${materialId}:${page}`;
+}
+
 async function fetchBank(
   supabase: SupabaseClient,
   sourceScope: SourceScope,
@@ -121,7 +132,15 @@ async function fetchBank(
   }
   const { data, error } = await query;
   if (error) throw new Error(`Failed to load question bank: ${error.message}`);
-  return (data ?? []) as unknown as BankQuestionRow[];
+
+  const rows = (data ?? []) as unknown as BankQuestionRow[];
+  const activations = await fetchBankSetActivations(supabase);
+  const themeIds = [...new Set(rows.map((row) => row.theme_id))];
+  const activeByTheme = buildActiveBankSetByTheme(themeIds, activations);
+
+  return rows.filter(
+    (row) => row.bank_set_id === activeByTheme.get(row.theme_id),
+  );
 }
 
 /** Times each bank question was already served to this student (any mode). */
@@ -204,6 +223,10 @@ export async function createExamAttempt(
     questionId: row.id,
     themeId: row.theme_id,
     seenCount: seen.get(row.id) ?? 0,
+    anchorKey: toAnchorKey(
+      row.presentation_anchor_material_id,
+      row.presentation_anchor_page,
+    ),
   }));
 
   const selection = selectExamQuestions(blueprint, selectable, rng);
@@ -294,6 +317,10 @@ export async function createPracticeSession(
     questionId: row.id,
     themeId: row.theme_id,
     seenCount: seen.get(row.id) ?? 0,
+    anchorKey: toAnchorKey(
+      row.presentation_anchor_material_id,
+      row.presentation_anchor_page,
+    ),
   }));
 
   const selection = selectExamQuestions(

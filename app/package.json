@@ -12,7 +12,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "ingest": "tsx scripts/ingestion/run-ingestion.ts"
+    "ingest": "tsx scripts/ingestion/run-ingestion.ts",
+    "ingest:check": "tsx scripts/ingestion/check-quality.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",

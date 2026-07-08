@@ -76,6 +76,15 @@ server-side and redirects to `/painel`). Test with a never-used email address, n
 you already signed in with once, or you'll only exercise the Magic Link template and
 miss a broken Confirm-signup template.
 
+**Never put quotes inside a `style="..."` attribute in these templates.** Supabase
+renders them with Go's `html/template`, which fails to compile the whole template if a
+`style` attribute contains nested quotes (e.g. `font-family: ..., 'Segoe UI', ...`) —
+every send then fails with a generic empty `500` and no useful client-side error. Use
+unquoted multi-word font names instead. If a send fails for a reason that isn't obvious,
+check **Logs → Auth Logs** in the dashboard first — the real error (e.g.
+`html/template: ... ends in a non-text context`) only shows up there, never in the
+client SDK's error object.
+
 ### 3c. Allow the local dev origin to receive the login link
 
 The app passes `emailRedirectTo: \`${window.location.origin}/auth/confirm\`` on every

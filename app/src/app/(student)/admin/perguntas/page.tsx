@@ -24,7 +24,7 @@ export default async function AdminQuestionsPage() {
       supabase
         .from("questions")
         .select(
-          "id, prompt, explanation, status, quality_flags, correct_option_index, course_themes ( code ), question_options ( option_index, text )",
+          "id, prompt, explanation, status, quality_flags, correct_option_index, course_themes ( code ), question_bank_sets ( code ), question_options ( option_index, text )",
         )
         .in("status", ["unreviewed", "weakly_sourced", "source_conflict"])
         .order("created_at")
@@ -57,6 +57,9 @@ export default async function AdminQuestionsPage() {
         const theme = Array.isArray(question.course_themes)
           ? question.course_themes[0]
           : question.course_themes;
+        const bankSet = Array.isArray(question.question_bank_sets)
+          ? question.question_bank_sets[0]
+          : question.question_bank_sets;
         const options = [...(question.question_options ?? [])].sort(
           (a, b) => a.option_index - b.option_index,
         );
@@ -74,6 +77,9 @@ export default async function AdminQuestionsPage() {
               <p className="max-w-2xl font-medium">{question.prompt}</p>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{theme?.code}</Badge>
+                {bankSet?.code && (
+                  <Badge variant="outline">{bankSet.code.toUpperCase()}</Badge>
+                )}
                 <Badge
                   variant={
                     question.status === "source_conflict"

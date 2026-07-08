@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { BlueprintEntry } from "../blueprint";
-import { selectExamQuestions, type SelectableQuestion } from "../assembly";
+import {
+  selectExamQuestions,
+  selectFromThemePool,
+  type SelectableQuestion,
+} from "../assembly";
 import { seededRng } from "../rng";
 
 function makeBank(
@@ -9,12 +13,34 @@ function makeBank(
   count: number,
   seenCount = 0,
   prefix = themeId,
+  anchorKey: string | null = null,
 ): SelectableQuestion[] {
   return Array.from({ length: count }, (_, i) => ({
     questionId: `${prefix}-q${i}`,
     themeId,
     seenCount,
+    anchorKey,
   }));
+}
+
+function makeAnchoredBank(
+  themeId: string,
+  anchors: string[],
+  perAnchor: number,
+  seenCount = 0,
+): SelectableQuestion[] {
+  const bank: SelectableQuestion[] = [];
+  for (const anchor of anchors) {
+    for (let i = 0; i < perAnchor; i++) {
+      bank.push({
+        questionId: `${anchor}-q${i}`,
+        themeId,
+        seenCount,
+        anchorKey: anchor,
+      });
+    }
+  }
+  return bank;
 }
 
 const blueprint: BlueprintEntry[] = [
@@ -110,8 +136,66 @@ describe("selectExamQuestions", () => {
     const order = selection.orderedQuestionIds.map((id) =>
       id.startsWith("ed") ? "ed" : "da",
     );
-    // A grouped order would be 20x"ed" then 20x"da"; a shuffle interleaves.
     const transitions = order.filter((v, i) => i > 0 && v !== order[i - 1]);
     expect(transitions.length).toBeGreaterThan(1);
+  });
+
+  it("picks from distinct anchors when the bank allows", () => {
+    const bank = makeAnchoredBank("ed", ["a1", "a2", "a3", "a4", "a5"], 3);
+    const selection = selectExamQuestions(
+      [{ themeId: "ed", code: "ED", target: 4 }],
+      bank,
+      seededRng(10),
+    );
+    const picked = selection.perTheme[0].selected;
+    const anchors = new Set(
+      picked.map((id) => id.split("-q")[0]),
+    );
+    expect(anchors.size).toBe(4);
+  });
+
+  it("fills target from one anchor when the bank is anchor-skewed", () => {
+    const bank = makeAnchoredBank("ed", ["only"], 20);
+    const selection = selectExamQuestions(
+      [{ themeId: "ed", code: "ED", target: 4 }],
+      bank,
+      seededRng(11),
+    );
+    expect(selection.perTheme[0].selected).toHaveLength(4);
+    expect(new Set(selection.perTheme[0].selected).size).toBe(4);
+  });
+
+  it("prefers unseen on a new anchor over unseen on a used anchor", () => {
+    const bank: SelectableQuestion[] = [
+      {
+        questionId: "used-unseen",
+        themeId: "ed",
+        seenCount: 0,
+        anchorKey: "a1",
+      },
+      {
+        questionId: "new-unseen",
+        themeId: "ed",
+        seenCount: 0,
+        anchorKey: "a2",
+      },
+      {
+        questionId: "used-seen",
+        themeId: "ed",
+        seenCount: 5,
+        anchorKey: "a1",
+      },
+    ];
+    const picked = selectFromThemePool(bank, 2, seededRng(12));
+    expect(picked).toContain("used-unseen");
+    expect(picked).toContain("new-unseen");
+    expect(picked).toHaveLength(2);
+  });
+
+  it("spreads across anchors in practice-sized sessions before repeats", () => {
+    const bank = makeAnchoredBank("ed", ["a1", "a2", "a3", "a4", "a5"], 2);
+    const picked = selectFromThemePool(bank, 10, seededRng(13));
+    const anchors = picked.map((id) => id.split("-q")[0]);
+    expect(new Set(anchors).size).toBeGreaterThanOrEqual(5);
   });
 });
