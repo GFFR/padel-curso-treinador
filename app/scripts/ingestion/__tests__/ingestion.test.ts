@@ -23,7 +23,7 @@ function presentationChunk(
     themeCode: "ED",
     kind: "presentation",
     fileName,
-    relativePath: `Apresentaùùes/${fileName}`,
+    relativePath: `Apresenta√ß√µes/${fileName}`,
     pageStart: page,
     pageEnd: page,
     content,
@@ -59,7 +59,7 @@ describe("mergeTopicAnchors", () => {
       ),
       presentationChunk(
         4,
-        "O treinador deve opor-se ao doping e ser modelo ùtico para os mais jovens.",
+        "O treinador deve opor-se ao doping e ser modelo √©tico para os mais jovens.",
       ),
     ];
     expect(mergeTopicAnchors(chunks)).toHaveLength(2);
@@ -82,12 +82,12 @@ describe("matchManualChunks", () => {
       ...presentationChunk(1, "manual chunk"),
       kind: "manual" as const,
       content:
-        "O fair play manifesta comportamento leal respeito regras desportivas espùrito desportivo.",
+        "O fair play manifesta comportamento leal respeito regras desportivas esp√≠rito desportivo.",
     };
     const irrelevant = {
       ...presentationChunk(2, "manual chunk"),
       kind: "manual" as const,
-      content: "Metodologia periodizaùùo treino forùa resistùncia velocidade.",
+      content: "Metodologia periodiza√ß√£o treino for√ßa resist√™ncia velocidade.",
     };
     expect(scoreManualChunk(anchor, relevant)).toBeGreaterThan(
       scoreManualChunk(anchor, irrelevant),
@@ -115,7 +115,7 @@ describe("validateCandidateGrounding", () => {
   it("rejects prompts with no anchor overlap", () => {
     expect(
       isPromptGroundedInAnchor(
-        "Segundo Kant, o que ù a ùtica deontolùgica?",
+        "Segundo Kant, o que √© a √©tica deontol√≥gica?",
         anchor,
       ),
     ).toBe(false);

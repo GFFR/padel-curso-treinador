@@ -1,4 +1,4 @@
-/** A versioned question bank set (v1, v2, …). */
+/** A versioned question bank set (v1, v2, â€¦). */
 export interface BankSet {
   id: string;
   code: string;

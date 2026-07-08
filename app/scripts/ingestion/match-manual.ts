@@ -3,7 +3,7 @@ import type { ExtractedChunk, TopicAnchor } from "./extract";
 const STOP_WORDS = new Set([
   "a", "o", "os", "as", "de", "da", "do", "dos", "das", "em", "no", "na", "nos", "nas",
   "um", "uma", "uns", "umas", "e", "ou", "que", "para", "por", "com", "sem", "se", "ao",
-  "aos", "à", "às", "é", "ser", "como", "mais", "menos", "sobre", "entre", "quando",
+  "aos", "Ã ", "Ã s", "Ã©", "ser", "como", "mais", "menos", "sobre", "entre", "quando",
   "onde", "qual", "quais", "este", "esta", "estes", "estas", "esse", "essa", "isso",
 ]);
 
@@ -40,7 +40,7 @@ export function scoreManualChunk(anchor: TopicAnchor, manual: ExtractedChunk): n
 const MAX_MANUAL_CHARS = 1500;
 
 /**
- * Returns the best-matching manual excerpts for one anchor (top 1–2 chunks,
+ * Returns the best-matching manual excerpts for one anchor (top 1â€“2 chunks,
  * trimmed to ~1500 chars total).
  */
 export function matchManualChunks(

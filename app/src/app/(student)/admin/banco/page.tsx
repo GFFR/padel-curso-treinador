@@ -14,7 +14,7 @@ import {
 } from "@/lib/services/bank-set-service";
 
 export const metadata: Metadata = {
-  title: "Banco de perguntas ù Admin",
+  title: "Banco de perguntas ‚Äî Admin",
 };
 
 export default async function AdminBankPage() {
@@ -33,7 +33,7 @@ export default async function AdminBankPage() {
     <div className="space-y-10">
       <section className="rounded-xl border border-border bg-card p-6">
         <h2 className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
-          Banco ativo (predefiniùùo global)
+          Banco ativo (predefini√ß√£o global)
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           Os alunos veem perguntas do conjunto ativo. Pode definir um override
@@ -50,7 +50,7 @@ export default async function AdminBankPage() {
                   size="sm"
                   variant={isActive ? "default" : "outline"}
                 >
-                  {set.code.toUpperCase()} ù {set.label}
+                  {set.code.toUpperCase()} ‚Äî {set.label}
                   {isActive && " ?"}
                 </Button>
               </form>
@@ -71,7 +71,7 @@ export default async function AdminBankPage() {
             >
               <div>
                 <span className="font-heading font-semibold uppercase">
-                  {row.code.replace("_", " ù ")}
+                  {row.code.replace("_", " ‚Äî ")}
                 </span>
                 <span className="ml-2 text-sm text-muted-foreground">
                   {row.name}
@@ -123,13 +123,13 @@ export default async function AdminBankPage() {
 
       <section className="text-sm text-muted-foreground">
         <p>
-          Conjuntos disponùveis:{" "}
+          Conjuntos dispon√≠veis:{" "}
           {bankSets
             .map((s) => `${s.code} (${s.description ?? s.label})`)
-            .join(" ù ")}
+            .join(" ‚Äî ")}
         </p>
         <p className="mt-2">
-          Apùs ingerir v2, corra{" "}
+          Ap√≥s ingerir v2, corra{" "}
           <code className="rounded bg-muted px-1">npm run ingest:check -- --theme ED --bank-set v2</code>{" "}
           e active o override do tema quando estiver satisfeito.
         </p>

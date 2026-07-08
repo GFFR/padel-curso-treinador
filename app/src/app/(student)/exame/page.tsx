@@ -10,7 +10,7 @@ import {
 } from "@/lib/domain/types";
 
 export const metadata: Metadata = {
-  title: "Novo exame — Padel Grau I",
+  title: "Novo exame â€” Padel Grau I",
 };
 
 export default async function NewExamPage() {
@@ -30,19 +30,19 @@ export default async function NewExamPage() {
           Novo exame<span className="text-ball">.</span>
         </h1>
         <p className="mt-2 max-w-xl text-muted-foreground">
-          Simulação completa com {EXAM_TOTAL_QUESTIONS} perguntas e{" "}
-          {EXAM_DURATION_MINUTES} minutos, escala de 0 a 20. As respostas são
-          reveladas no fim. Aprovação a partir de{" "}
+          SimulaÃ§Ã£o completa com {EXAM_TOTAL_QUESTIONS} perguntas e{" "}
+          {EXAM_DURATION_MINUTES} minutos, escala de 0 a 20. As respostas sÃ£o
+          reveladas no fim. AprovaÃ§Ã£o a partir de{" "}
           {PASS_SCORE.toLocaleString("pt-PT", { minimumFractionDigits: 1 })}.
         </p>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-6">
         <h2 className="font-heading text-2xl font-semibold uppercase">
-          Distribuição por tema
+          DistribuiÃ§Ã£o por tema
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          O peso de cada tema segue as horas do calendário do curso.
+          O peso de cada tema segue as horas do calendÃ¡rio do curso.
         </p>
         <ul className="mt-5 divide-y divide-border">
           {(themes ?? []).map((theme) => (
@@ -52,7 +52,7 @@ export default async function NewExamPage() {
             >
               <div>
                 <p className="text-sm font-medium">
-                  {theme.code.replace("_", " — ")}
+                  {theme.code.replace("_", " â€” ")}
                 </p>
                 <p className="text-xs text-muted-foreground">{theme.name}</p>
               </div>
@@ -63,7 +63,7 @@ export default async function NewExamPage() {
           ))}
         </ul>
         <form action={startFullExam} className="mt-6">
-          <Button type="submit">Começar exame</Button>
+          <Button type="submit">ComeÃ§ar exame</Button>
         </form>
       </section>
     </div>
