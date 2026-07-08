@@ -144,9 +144,25 @@ export function PracticeRunner({
             <p className="mt-1">{reveal.explanation}</p>
             {reveal.manualReference?.fileName && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Estudo: {reveal.manualReference.fileName}
-                {reveal.manualReference.page &&
-                  `, página ${reveal.manualReference.page}`}
+                Estudo:{" "}
+                {reveal.manualUrl ? (
+                  <a
+                    href={reveal.manualUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline underline-offset-2 hover:text-court"
+                  >
+                    {reveal.manualReference.fileName}
+                    {reveal.manualReference.page &&
+                      `, página ${reveal.manualReference.page}`}
+                  </a>
+                ) : (
+                  <>
+                    {reveal.manualReference.fileName}
+                    {reveal.manualReference.page &&
+                      `, página ${reveal.manualReference.page}`}
+                  </>
+                )}
                 {reveal.manualReference.sectionTitle &&
                   ` — ${reveal.manualReference.sectionTitle}`}
               </p>

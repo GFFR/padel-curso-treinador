@@ -4,6 +4,8 @@
  *   npm run ingest -- --theme ED                       # full run (needs env keys)
  *   npm run ingest -- --theme ED --dry-run             # extraction only, no keys needed
  *   npm run ingest -- --theme ED --scope presentations_only
+ *   npm run ingest -- --theme TMTD --anchors 30..36    # recover one failed batch
+ *                                                      # (batch N of K covers anchors (N-1)*6..N*6)
  *
  * Phases: extract PDFs → chunk + theme-tag → store materials/chunks →
  * AI structured generation → Zod validation → duplicate detection → insert.
@@ -37,6 +39,8 @@ interface CliArgs {
   theme: ThemeCode;
   scope: SourceScope;
   dryRun: boolean;
+  /** Optional 0-based anchor slice "from..to" for recovering a failed batch. */
+  anchorRange: { from: number; to: number } | null;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -52,7 +56,14 @@ function parseArgs(argv: string[]): CliArgs {
   if (scope !== "full_materials" && scope !== "presentations_only") {
     throw new Error(`Unknown scope "${scope}".`);
   }
-  return { theme, scope, dryRun: argv.includes("--dry-run") };
+  const rangeArg = get("--anchors");
+  let anchorRange: CliArgs["anchorRange"] = null;
+  if (rangeArg) {
+    const match = /^(\d+)\.\.(\d+)$/.exec(rangeArg);
+    if (!match) throw new Error(`--anchors expects "from..to" (0-based, end-exclusive).`);
+    anchorRange = { from: Number(match[1]), to: Number(match[2]) };
+  }
+  return { theme, scope, dryRun: argv.includes("--dry-run"), anchorRange };
 }
 
 async function main() {
@@ -70,9 +81,16 @@ async function main() {
     chunksByEntry.push({ entry, chunks });
   }
 
-  const anchors = chunksByEntry
+  let anchors = chunksByEntry
     .filter(({ entry }) => entry.kind === "presentation")
     .flatMap(({ chunks }) => chunks);
+  if (args.anchorRange) {
+    anchors = anchors.slice(args.anchorRange.from, args.anchorRange.to);
+    console.log(
+      `Anchor slice ${args.anchorRange.from}..${args.anchorRange.to}: ` +
+        anchors.map((c) => `${c.fileName} p${c.pageStart}`).join(", "),
+    );
+  }
   const manualChunks =
     args.scope === "full_materials"
       ? chunksByEntry

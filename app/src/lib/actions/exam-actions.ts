@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { requireStudent } from "@/lib/auth";
+import { signMaterialUrl } from "@/lib/materials";
 import {
   answerAttemptQuestion,
   createExamAttempt,
@@ -40,6 +41,8 @@ export interface AnswerResult {
     page: number | null;
     sectionTitle: string | null;
   } | null;
+  /** Signed link to the referenced manual PDF, opened at the cited page. */
+  manualUrl: string | null;
 }
 
 /**
@@ -74,6 +77,13 @@ export async function answerQuestion(params: {
     manualReference: AnswerResult["manualReference"];
   };
 
+  const manualUrl = snapshot.manualReference?.fileName
+    ? await signMaterialUrl(
+        snapshot.manualReference.fileName,
+        snapshot.manualReference.page,
+      )
+    : null;
+
   return {
     isCorrect: snapshot.correctOptionIndex === params.selectedOptionIndex,
     correctOptionIndex: snapshot.correctOptionIndex,
@@ -82,6 +92,7 @@ export async function answerQuestion(params: {
       .sort((a, b) => a.index - b.index)
       .map((o) => o.justification ?? null),
     manualReference: snapshot.manualReference,
+    manualUrl,
   };
 }
 

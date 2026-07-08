@@ -5,6 +5,7 @@ import {
   selectExamQuestions,
   type SelectableQuestion,
 } from "@/lib/domain/assembly";
+import { permuteOptions } from "@/lib/domain/options";
 import { scoreExam } from "@/lib/domain/scoring";
 import { shuffle, type Rng } from "@/lib/domain/rng";
 import {
@@ -55,22 +56,33 @@ function firstOrNull<T>(value: T[] | T | null): T | null {
   return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
-function toSnapshot(row: BankQuestionRow, themeCode: ThemeCode): QuestionSnapshot {
+function toSnapshot(
+  row: BankQuestionRow,
+  themeCode: ThemeCode,
+  rng: Rng,
+): QuestionSnapshot {
   const anchorFile = firstOrNull(row.presentation_anchor);
   const manualFile = firstOrNull(row.manual_reference);
-  return {
-    questionId: row.id,
-    themeCode,
-    status: row.status as QuestionSnapshot["status"],
-    prompt: row.prompt,
-    options: [...row.question_options]
+  // Options are shuffled per attempt: the bank's canonical order carries a
+  // strong position bias from generation (correct answer mostly first).
+  const permuted = permuteOptions(
+    [...row.question_options]
       .sort((a, b) => a.option_index - b.option_index)
       .map((o) => ({
         index: o.option_index,
         text: o.text,
         justification: o.justification,
       })),
-    correctOptionIndex: row.correct_option_index,
+    row.correct_option_index,
+    rng,
+  );
+  return {
+    questionId: row.id,
+    themeCode,
+    status: row.status as QuestionSnapshot["status"],
+    prompt: row.prompt,
+    options: permuted.options,
+    correctOptionIndex: permuted.correctOptionIndex,
     explanation: row.explanation,
     sourceScope: row.source_scope,
     presentationAnchor: row.presentation_anchor_material_id
@@ -136,6 +148,7 @@ async function insertAttemptQuestions(
   orderedIds: string[],
   rowsById: Map<string, BankQuestionRow>,
   codeByThemeId: Map<string, ThemeCode>,
+  rng: Rng,
 ) {
   const rows = orderedIds.map((questionId, position) => {
     const row = rowsById.get(questionId)!;
@@ -144,7 +157,7 @@ async function insertAttemptQuestions(
       question_id: questionId,
       position,
       theme_id: row.theme_id,
-      question_snapshot: toSnapshot(row, codeByThemeId.get(row.theme_id)!),
+      question_snapshot: toSnapshot(row, codeByThemeId.get(row.theme_id)!, rng),
     };
   });
   const { error } = await supabase.from("exam_attempt_questions").insert(rows);
@@ -235,6 +248,7 @@ export async function createExamAttempt(
     selection.orderedQuestionIds,
     rowsById,
     codeByThemeId,
+    rng,
   );
 
   return {
@@ -325,6 +339,7 @@ export async function createPracticeSession(
     selection.orderedQuestionIds,
     rowsById,
     codeByThemeId,
+    rng,
   );
 
   return {

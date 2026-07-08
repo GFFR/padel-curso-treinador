@@ -7,8 +7,34 @@ import { FeedbackBar } from "@/components/exam/feedback-bar";
 import { QuestionStatusBadge } from "@/components/exam/question-status-badge";
 import { OPTION_LETTERS } from "@/components/exam/types";
 import { requireStudent } from "@/lib/auth";
+import { signMaterialUrls } from "@/lib/materials";
 import { THEME_LABELS, type QuestionSnapshot, type ThemeCode } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
+
+function withPage(url: string | undefined, page: number | null): string | null {
+  if (!url) return null;
+  return page ? `${url}#page=${page}` : url;
+}
+
+function SourceLink({
+  url,
+  children,
+}: {
+  url: string | null;
+  children: React.ReactNode;
+}) {
+  if (!url) return <>{children}</>;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="underline underline-offset-2 hover:text-court"
+    >
+      {children}
+    </a>
+  );
+}
 
 export default async function ResultPage({
   params,
@@ -49,6 +75,15 @@ export default async function ResultPage({
       isCorrect: answer?.is_correct ?? false,
     };
   });
+
+  // One signed URL per unique referenced PDF (private bucket, decision 0009).
+  const referencedFiles = items.flatMap((item) =>
+    [
+      item.snapshot.manualReference?.fileName,
+      item.snapshot.presentationAnchor?.fileName,
+    ].filter((name): name is string => Boolean(name)),
+  );
+  const signedUrls = await signMaterialUrls(referencedFiles);
 
   const correctCount = items.filter((item) => item.isCorrect).length;
   const percent = Math.round((correctCount / items.length) * 100);
@@ -169,18 +204,34 @@ export default async function ResultPage({
               <p>{item.snapshot.explanation}</p>
               {item.snapshot.manualReference?.fileName && (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Estudo: {item.snapshot.manualReference.fileName}
-                  {item.snapshot.manualReference.page &&
-                    `, página ${item.snapshot.manualReference.page}`}
+                  Estudo:{" "}
+                  <SourceLink
+                    url={withPage(
+                      signedUrls.get(item.snapshot.manualReference.fileName),
+                      item.snapshot.manualReference.page,
+                    )}
+                  >
+                    {item.snapshot.manualReference.fileName}
+                    {item.snapshot.manualReference.page &&
+                      `, página ${item.snapshot.manualReference.page}`}
+                  </SourceLink>
                   {item.snapshot.manualReference.sectionTitle &&
                     ` — ${item.snapshot.manualReference.sectionTitle}`}
                 </p>
               )}
               {item.snapshot.presentationAnchor?.fileName && (
                 <p className="mt-1 text-xs text-muted-foreground/70">
-                  Aula: {item.snapshot.presentationAnchor.fileName}
-                  {item.snapshot.presentationAnchor.page &&
-                    `, diapositivo ${item.snapshot.presentationAnchor.page}`}
+                  Aula:{" "}
+                  <SourceLink
+                    url={withPage(
+                      signedUrls.get(item.snapshot.presentationAnchor.fileName),
+                      item.snapshot.presentationAnchor.page,
+                    )}
+                  >
+                    {item.snapshot.presentationAnchor.fileName}
+                    {item.snapshot.presentationAnchor.page &&
+                      `, diapositivo ${item.snapshot.presentationAnchor.page}`}
+                  </SourceLink>
                 </p>
               )}
               <FeedbackBar

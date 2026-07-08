@@ -17,7 +17,7 @@ milestone section lists exactly what is done and what is next.
 | M4: One-theme AI ingestion | ✅ Done (code) | Pipeline complete; live run pending keys (M7) |
 | M5: Student exam and practice | ✅ Done (code) | Full PT student flows; live smoke test pending keys |
 | M6: Feedback and admin | ✅ Done (code) | Thumbs, reports, admin MVP complete |
-| M7: Expand ingestion | ⏸ Blocked | Needs Supabase project + ANTHROPIC_API_KEY — runbook ready |
+| M7: Expand ingestion | ✅ Done | All six themes ingested + verified live (2026-07-08) |
 
 ## Completed: M1 — App scaffold
 
@@ -100,19 +100,28 @@ Commands: `cd app && npm run dev` (dev server), `npm run build && npm start` (pr
   `reportes` (support messages with question context).
 - All session routes forced dynamic. Lint/typecheck/tests/build green. Decision 0008.
 
-## Current Milestone: M7 — Expand ingestion to all themes
+## Completed: M7 — Expand ingestion to all themes (2026-07-08)
 
-Everything is code-complete; M7 is an **operational** milestone requiring live keys:
+- User created the Supabase project, applied migrations/seeds via SQL editor, configured
+  phone OTP (test OTP + Twilio) and put keys in `app/.env`.
+- All six themes ingested with `claude-opus-4-8`: **~347 questions** with provenance and
+  quality flags. Failed batches (transient network) were recovered surgically with the
+  new `--anchors FROM..TO` CLI flag — every slide batch has coverage.
+- Live smoke tests passed end-to-end: OTP login, practice with immediate reveal + linked
+  manual reference, thumbs feedback (DB-verified), question report surface, admin
+  overview/review-queue/approve (DB-verified), full 80-question exam assembly with exact
+  blueprint 33/27/7/5/4/4 and zero shortfalls.
+- Post-launch improvements shipped during M7 (decision 0009): per-attempt option
+  shuffling (fixes 91%-in-A bias) and signed PDF links (private `materiais` bucket).
+- The user's account (351910236363) is admin.
 
-1. Create the Supabase project + enable phone OTP (docs/implementation/supabase-setup.md).
-2. `cp app/.env.example app/.env.local` and fill in Supabase + `ANTHROPIC_API_KEY`.
-3. Apply migrations + `seed.sql` (+ optionally `seed_sample_questions.sql` for smoke tests).
-4. Smoke-test: OTP login → practice ED (sample questions) → full exam → admin pages.
-5. `npm run ingest -- --theme ED`, review candidates in `/admin/perguntas`, tune prompt
-   if needed (bump `PROMPT_VERSION`).
-6. Repeat for DA, FCH_DOPING, FCH, TMTD, PDD (small → large). Watch PDD cost — consider
-   manual-chunk selection (decision 0006 §10).
-7. Make yourself admin (SQL in the runbook) and re-check dashboards with real data.
+## Post-MVP backlog
+
+- Review the `unreviewed` bank in `/admin/perguntas` (admin task, ongoing).
+- Consider pgvector + semantic chunk selection for PDD-scale themes (0006 §10).
+- Split snapshot into student-visible + grading parts to close the DB-level
+  correct-answer leak during open exams (0005 §6).
+- Deploy (Vercel or similar) — set env vars, rerun a build with production URL.
 
 ## Environment / Runtime Notes
 
