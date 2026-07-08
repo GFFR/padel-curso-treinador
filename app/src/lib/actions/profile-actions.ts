@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { requireStudentForOnboarding } from "@/lib/auth";
+import { requireAuthenticatedStudent } from "@/lib/auth";
 
 const AVATAR_BUCKET = "avatars";
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
@@ -12,7 +12,7 @@ const ALLOWED_AVATAR_TYPES = new Set([
   "image/webp",
 ]);
 
-const onboardingSchema = z.object({
+const profileSchema = z.object({
   displayName: z
     .string()
     .trim()
@@ -31,23 +31,26 @@ function avatarExtension(contentType: string): string {
   }
 }
 
-export async function completeOnboarding(
+export async function updateProfile(
   formData: FormData,
 ): Promise<{ error?: string }> {
-  const parsed = onboardingSchema.safeParse({
+  const parsed = profileSchema.safeParse({
     displayName: formData.get("displayName"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
 
-  const { supabase } = await requireStudentForOnboarding();
+  const { supabase } = await requireAuthenticatedStudent();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada. Entra novamente." };
 
-  let avatarPath: string | null = null;
+  const updatePayload: { display_name: string; avatar_path?: string } = {
+    display_name: parsed.data.displayName,
+  };
+
   const avatar = formData.get("avatar");
   if (avatar instanceof File && avatar.size > 0) {
     if (!ALLOWED_AVATAR_TYPES.has(avatar.type)) {
@@ -57,21 +60,19 @@ export async function completeOnboarding(
       return { error: "A foto não pode exceder 2 MB." };
     }
 
-    avatarPath = `${user.id}/avatar.${avatarExtension(avatar.type)}`;
+    const avatarPath = `${user.id}/avatar.${avatarExtension(avatar.type)}`;
     const { error: uploadError } = await supabase.storage
       .from(AVATAR_BUCKET)
       .upload(avatarPath, avatar, { upsert: true, contentType: avatar.type });
     if (uploadError) {
       return { error: "Não foi possível carregar a foto. Tenta novamente." };
     }
+    updatePayload.avatar_path = avatarPath;
   }
 
   const { error } = await supabase
     .from("student_profiles")
-    .update({
-      display_name: parsed.data.displayName,
-      avatar_path: avatarPath,
-    })
+    .update(updatePayload)
     .eq("auth_user_id", user.id);
   if (error) {
     return { error: "Não foi possível guardar o perfil. Tenta novamente." };
@@ -79,3 +80,6 @@ export async function completeOnboarding(
 
   return {};
 }
+
+/** @deprecated Use updateProfile */
+export const completeOnboarding = updateProfile;

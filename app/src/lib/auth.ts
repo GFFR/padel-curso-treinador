@@ -49,6 +49,13 @@ export async function requireStudent(): Promise<StudentContext> {
   return context;
 }
 
+/** Requires a signed-in student profile row, without an onboarding gate. */
+export async function requireAuthenticatedStudent(): Promise<StudentContext> {
+  const context = await loadStudentContext();
+  if (!context) redirect("/entrar");
+  return context;
+}
+
 /** For the welcome screen — requires auth but rejects already-onboarded students. */
 export async function requireStudentForOnboarding(): Promise<StudentContext> {
   const context = await loadStudentContext();

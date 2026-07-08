@@ -41,6 +41,9 @@ export function StudentUserMenu({
         <ChevronDown className="size-4 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-40">
+        <DropdownMenuItem onClick={() => router.push("/perfil")}>
+          Perfil
+        </DropdownMenuItem>
         <DropdownMenuItem variant="destructive" onClick={logout}>
           Sair
         </DropdownMenuItem>

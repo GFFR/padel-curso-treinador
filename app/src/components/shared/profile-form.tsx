@@ -3,20 +3,36 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
-import { completeOnboarding } from "@/lib/actions/profile-actions";
+import { updateProfile } from "@/lib/actions/profile-actions";
 import { getProfileInitials } from "@/lib/profile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function OnboardingForm({ email }: { email: string | null }) {
+type ProfileFormProps = {
+  email: string | null;
+  initialDisplayName?: string;
+  initialAvatarUrl?: string | null;
+  submitLabel?: string;
+  avatarActionLabel?: string;
+};
+
+export function ProfileForm({
+  email,
+  initialDisplayName = "",
+  initialAvatarUrl = null,
+  submitLabel = "Continuar",
+  avatarActionLabel = "Adicionar foto",
+}: ProfileFormProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [displayName, setDisplayName] = useState("");
+  const [displayName, setDisplayName] = useState(initialDisplayName);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const avatarSrc = previewUrl ?? initialAvatarUrl;
 
   function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -33,7 +49,7 @@ export function OnboardingForm({ email }: { email: string | null }) {
     setError(null);
 
     const formData = new FormData(event.currentTarget);
-    const result = await completeOnboarding(formData);
+    const result = await updateProfile(formData);
     setPending(false);
 
     if (result.error) {
@@ -55,15 +71,13 @@ export function OnboardingForm({ email }: { email: string | null }) {
           aria-label="Escolher foto de perfil"
         >
           <Avatar size="lg" className="size-24">
-            {previewUrl ? (
-              <AvatarImage src={previewUrl} alt="" />
-            ) : null}
+            {avatarSrc ? <AvatarImage src={avatarSrc} alt="" /> : null}
             <AvatarFallback className="text-lg">
               {getProfileInitials(displayName, email)}
             </AvatarFallback>
           </Avatar>
           <span className="absolute inset-x-0 bottom-0 rounded-b-full bg-foreground/70 py-1 text-center text-xs text-background opacity-0 transition-opacity group-hover:opacity-100">
-            Adicionar foto
+            {avatarActionLabel}
           </span>
         </button>
         <input
@@ -99,7 +113,7 @@ export function OnboardingForm({ email }: { email: string | null }) {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? "A guardar..." : "Continuar"}
+        {pending ? "A guardar..." : submitLabel}
       </Button>
     </form>
   );

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { requireStudentForOnboarding } from "@/lib/auth";
-import { OnboardingForm } from "./onboarding-form";
+import { ProfileForm } from "@/components/shared/profile-form";
 
 export const metadata: Metadata = {
   title: "Bem-vindo — Padel Grau I",
@@ -32,7 +32,7 @@ export default async function WelcomePage() {
           foto de perfil.
         </p>
         <div className="mt-8">
-          <OnboardingForm email={email} />
+          <ProfileForm email={email} />
         </div>
       </main>
     </div>
