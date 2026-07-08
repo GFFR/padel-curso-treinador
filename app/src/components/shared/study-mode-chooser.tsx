@@ -43,8 +43,8 @@ export function StudyModeChooser(props: StudyModeChooserProps) {
             <p className="mt-2 max-w-xs text-sm text-court-line/80">
               {isGuest ? (
                 <>
-                  80 perguntas, 90 minutos, escala de 0 a 20 ù como no exame
-                  real.
+                  80 perguntas, 90 minutos, escala de 0 a 20 ‚Äî como no
+                  exame real.
                 </>
               ) : (
                 <>
@@ -54,7 +54,8 @@ export function StudyModeChooser(props: StudyModeChooserProps) {
               )}
             </p>
             <p className="mt-1 text-xs text-court-line/70">
-              {EXAM_TOTAL_QUESTIONS} perguntas ù {EXAM_DURATION_MINUTES} min
+              {EXAM_TOTAL_QUESTIONS} perguntas ¬∑ {EXAM_DURATION_MINUTES}{" "}
+              min
             </p>
             {isGuest ? (
               <Button
@@ -69,7 +70,7 @@ export function StudyModeChooser(props: StudyModeChooserProps) {
                   type="submit"
                   className="bg-ball font-medium text-court-deep hover:bg-ball/90"
                 >
-                  Comeùar exame
+                  Come√ßar exame
                 </Button>
               </form>
             )}
@@ -87,18 +88,18 @@ export function StudyModeChooser(props: StudyModeChooserProps) {
             <p className="mt-2 max-w-xs text-sm text-court-line/80">
               {isGuest ? (
                 <>
-                  Sessùes livres por tema, sem relùgio, com resposta e
-                  explicaùùo imediatas.
+                  Sess√µes livres por tema, sem rel√≥gio, com
+                  resposta e explica√ß√£o imediatas.
                 </>
               ) : (
                 <>
-                  Sessùes livres, sem relùgio, com resposta e explicaùùo
-                  imediatas.
+                  Sess√µes livres, sem rel√≥gio, com resposta e
+                  explica√ß√£o imediatas.
                 </>
               )}
             </p>
             <p className="mt-1 text-xs text-court-line/70">
-              Sem relùgio ù resposta imediata
+              Sem rel√≥gio ¬∑ resposta imediata
             </p>
             <Button
               render={<Link href={isGuest ? "/entrar" : "/praticar"} />}
