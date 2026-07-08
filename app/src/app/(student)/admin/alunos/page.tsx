@@ -6,7 +6,7 @@ export default async function AdminStudentsPage() {
   const [{ data: students }, { data: attempts }] = await Promise.all([
     supabase
       .from("student_profiles")
-      .select("id, phone, role, created_at")
+      .select("id, email, role, created_at")
       .order("created_at", { ascending: false }),
     supabase
       .from("exam_attempts")
@@ -35,7 +35,7 @@ export default async function AdminStudentsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-muted-foreground uppercase">
-              <th className="py-2 pr-4 font-medium">Telemóvel</th>
+              <th className="py-2 pr-4 font-medium">Email</th>
               <th className="py-2 pr-4 font-medium">Registo</th>
               <th className="py-2 pr-4 font-medium">Exames</th>
               <th className="py-2 pr-4 font-medium">Média (0-20)</th>
@@ -47,7 +47,7 @@ export default async function AdminStudentsPage() {
               const stats = statsByStudent.get(student.id);
               return (
                 <tr key={student.id} className="border-b border-border/60">
-                  <td className="py-2 pr-4">{student.phone ?? "—"}</td>
+                  <td className="py-2 pr-4">{student.email ?? "—"}</td>
                   <td className="py-2 pr-4 text-muted-foreground">
                     {new Date(student.created_at).toLocaleDateString("pt-PT")}
                   </td>

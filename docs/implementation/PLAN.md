@@ -113,7 +113,37 @@ Commands: `cd app && npm run dev` (dev server), `npm run build && npm start` (pr
   blueprint 33/27/7/5/4/4 and zero shortfalls.
 - Post-launch improvements shipped during M7 (decision 0009): per-attempt option
   shuffling (fixes 91%-in-A bias) and signed PDF links (private `materiais` bucket).
-- The user's account (351910236363) is admin.
+- The user's account (351910236363, phone OTP) was admin as of the end of M7.
+
+## Post-launch: email OTP auth (2026-07-08)
+
+Switched student login from phone OTP to email OTP (ADR 0008, supersedes ADR 0006;
+decision 0010). Migration `00003_email_auth.sql` drops `student_profiles.phone` and adds
+`email text not null unique`; `login-form.tsx` is a straight port of the two-step
+phone/code UI to email/code (`signInWithOtp({ email })` /
+`verifyOtp({ email, token, type: "email" })`); admin screens show email instead of
+phone. No SMS provider needed anymore. The migration is self-contained (backfills
+`email` from `auth.users` where possible, drops any row it can't fill in) — the
+pre-migration test profile (phone 351910236363) had no email and was dropped by the
+migration itself. First draft of the migration required a manual dashboard delete first
+and failed in the field because the SQL editor runs a pasted script as one transaction —
+fixed to be self-contained (decision 0010).
+
+Two more issues surfaced running it live, both fixed same-day (decision 0010 postmortem
+section):
+
+- **Redirect loop**: `/entrar` redirected to `/painel` on any session cookie without
+  checking a profile still existed, so the migrated-away stale session bounced forever.
+  Fixed in `src/app/entrar/page.tsx`.
+- **Supabase's built-in mailer caps at ~2 emails/hour** — unusable for testing or real
+  students. Backend chain (verify → trigger → RLS) was proven correct anyway via
+  `admin.generateLink()` + `verifyOtp()` without sending real email. Permanent fix:
+  custom SMTP via Resend, documented in `docs/implementation/supabase-setup.md` §3a.
+
+The account `goncaloramalho88@gmail.com` is live and promoted to admin. Full real-browser
+click-through (typing email, receiving a real emailed code) is still pending — do it
+once Resend SMTP is configured, since the built-in mailer can't sustain even one clean
+test.
 
 ## Post-MVP backlog
 
@@ -145,3 +175,5 @@ Decisions are numbered notes in `docs/implementation/decisions/`. Add a row here
 | 0006 | Ingestion pipeline (unpdf, density-based manual split, structured outputs, caching) |
 | 0007 | Student UI (PT routes, client-safe snapshots, timer semantics, graceful degradation) |
 | 0008 | Feedback and admin (server-side report context, review queue, force-dynamic) |
+| 0009 | Option shuffling and linked source PDFs (private signed-URL bucket) |
+| 0010 | Email OTP auth migration (phone -> email, ADR 0008 supersedes ADR 0006) |

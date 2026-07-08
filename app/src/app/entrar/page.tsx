@@ -20,7 +20,18 @@ export default async function LoginPage() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (user) redirect("/painel");
+    // Only skip the login form when the session has a matching profile row —
+    // a valid-but-orphaned session (e.g. profile deleted by an admin action
+    // or migration) must fall through to the form instead of bouncing
+    // forever against requireStudent()'s own redirect back to /entrar.
+    if (user) {
+      const { data: profile } = await supabase
+        .from("student_profiles")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .single();
+      if (profile) redirect("/painel");
+    }
   }
 
   return (
@@ -38,7 +49,7 @@ export default async function LoginPage() {
           Entrar<span className="text-ball">.</span>
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Recebe um código por SMS para aceder às simulações de exame e à
+          Recebe um código por email para aceder às simulações de exame e à
           prática por tema.
         </p>
         <div className="mt-8">

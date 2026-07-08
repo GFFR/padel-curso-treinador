@@ -9,7 +9,7 @@ export default async function AdminAttemptsPage() {
   const { data: attempts } = await supabase
     .from("exam_attempts")
     .select(
-      "id, source_scope, started_at, submitted_at, score_0_20, passed, student_profiles ( phone )",
+      "id, source_scope, started_at, submitted_at, score_0_20, passed, student_profiles ( email )",
     )
     .eq("mode", "exam")
     .not("submitted_at", "is", null)
@@ -46,7 +46,7 @@ export default async function AdminAttemptsPage() {
                       timeStyle: "short",
                     })}
                   </td>
-                  <td className="py-2 pr-4">{student?.phone ?? "—"}</td>
+                  <td className="py-2 pr-4">{student?.email ?? "—"}</td>
                   <td className="py-2 pr-4 text-muted-foreground">
                     {attempt.source_scope === "presentations_only"
                       ? "Só apresentações"

@@ -65,5 +65,5 @@ An untimed study flow focused on one or more course themes rather than a full ex
 _Avoid_: Quiz, drill, training mode
 
 **Student Account**:
-A student identity created through phone-number OTP and used to associate exam attempts, practice sessions, feedback, and performance stats.
+A student identity created through email OTP and used to associate exam attempts, practice sessions, feedback, and performance stats.
 _Avoid_: User, login, profile

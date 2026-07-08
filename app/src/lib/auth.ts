@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 export interface StudentContext {
   supabase: Awaited<ReturnType<typeof createClient>>;
   studentId: string;
-  phone: string | null;
+  email: string | null;
   role: "student" | "admin";
 }
 
@@ -24,7 +24,7 @@ export async function requireStudent(): Promise<StudentContext> {
 
   const { data: profile } = await supabase
     .from("student_profiles")
-    .select("id, phone, role")
+    .select("id, email, role")
     .eq("auth_user_id", user.id)
     .single();
   if (!profile) redirect("/entrar");
@@ -32,7 +32,7 @@ export async function requireStudent(): Promise<StudentContext> {
   return {
     supabase,
     studentId: profile.id,
-    phone: profile.phone,
+    email: profile.email,
     role: profile.role,
   };
 }

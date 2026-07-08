@@ -8,20 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 
-type Step = "phone" | "code";
-
-/** Prefixes 9-digit national numbers with +351; passes full E.164 through. */
-function normalizePhone(raw: string): string {
-  const digits = raw.replace(/[\s()-]/g, "");
-  if (digits.startsWith("+")) return digits;
-  if (/^9\d{8}$/.test(digits)) return `+351${digits}`;
-  return digits;
-}
+type Step = "email" | "code";
 
 export function LoginForm() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("phone");
-  const [phone, setPhone] = useState("");
+  const [step, setStep] = useState<Step>("email");
+  const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,13 +23,11 @@ export function LoginForm() {
     setPending(true);
     setError(null);
     const supabase = createClient();
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      phone: normalizePhone(phone),
-    });
+    const { error: otpError } = await supabase.auth.signInWithOtp({ email });
     setPending(false);
     if (otpError) {
       setError(
-        "Não foi possível enviar o código. Confirma o número e tenta novamente.",
+        "Não foi possível enviar o código. Confirma o email e tenta novamente.",
       );
       return;
     }
@@ -50,9 +40,9 @@ export function LoginForm() {
     setError(null);
     const supabase = createClient();
     const { error: verifyError } = await supabase.auth.verifyOtp({
-      phone: normalizePhone(phone),
+      email,
       token: code,
-      type: "sms",
+      type: "email",
     });
     setPending(false);
     if (verifyError) {
@@ -63,24 +53,21 @@ export function LoginForm() {
     router.refresh();
   }
 
-  if (step === "phone") {
+  if (step === "email") {
     return (
       <form onSubmit={sendCode} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="phone">Número de telemóvel</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
-            id="phone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="912 345 678"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            id="email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="nome@exemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <p className="text-xs text-muted-foreground">
-            Números portugueses podem omitir o indicativo +351.
-          </p>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" className="w-full" disabled={pending}>
@@ -93,7 +80,7 @@ export function LoginForm() {
   return (
     <form onSubmit={verifyCode} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="code">Código recebido por SMS</Label>
+        <Label htmlFor="code">Código recebido por email</Label>
         <Input
           id="code"
           type="text"
@@ -105,13 +92,13 @@ export function LoginForm() {
           required
         />
         <p className="text-xs text-muted-foreground">
-          Enviado para {normalizePhone(phone)}.{" "}
+          Enviado para {email}.{" "}
           <button
             type="button"
             className="underline underline-offset-2"
-            onClick={() => setStep("phone")}
+            onClick={() => setStep("email")}
           >
-            Alterar número
+            Alterar email
           </button>
         </p>
       </div>

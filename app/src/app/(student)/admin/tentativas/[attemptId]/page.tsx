@@ -20,7 +20,7 @@ export default async function AdminAttemptDetailPage({
   const { data: attempt } = await supabase
     .from("exam_attempts")
     .select(
-      "id, mode, source_scope, started_at, submitted_at, score_0_20, passed, blueprint_snapshot, student_profiles ( phone )",
+      "id, mode, source_scope, started_at, submitted_at, score_0_20, passed, blueprint_snapshot, student_profiles ( email )",
     )
     .eq("id", attemptId)
     .single();
@@ -38,7 +38,7 @@ export default async function AdminAttemptDetailPage({
           <div>
             <p className="text-xs tracking-widest text-muted-foreground uppercase">
               {attempt.mode === "exam" ? "Simulação de exame" : "Prática"} ·{" "}
-              {student?.phone ?? "aluno desconhecido"}
+              {student?.email ?? "aluno desconhecido"}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Início {new Date(attempt.started_at).toLocaleString("pt-PT")}

@@ -13,7 +13,7 @@ export default async function AdminReportsPage() {
   const { data: reports } = await supabase
     .from("support_reports")
     .select(
-      "id, kind, message, question_context, created_at, student_profiles ( phone )",
+      "id, kind, message, question_context, created_at, student_profiles ( email )",
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -45,7 +45,7 @@ export default async function AdminReportsPage() {
                   timeStyle: "short",
                 })}
               </span>
-              <span>· {student?.phone ?? "aluno desconhecido"}</span>
+              <span>· {student?.email ?? "aluno desconhecido"}</span>
             </div>
             <p className="mt-3 text-sm">{report.message}</p>
             {context?.prompt && (
