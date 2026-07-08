@@ -6,6 +6,7 @@ import {
   computeAttemptProgress,
   resolveAttemptStatus,
 } from "@/lib/admin/attempts";
+import { formatStudentIdentity } from "@/lib/profile";
 
 interface BlueprintSnapshot {
   totalQuestions?: number;
@@ -22,7 +23,10 @@ export type AdminAttemptRow = {
   score_0_20: number | null;
   passed: boolean | null;
   blueprint_snapshot: BlueprintSnapshot | null;
-  student_profiles: { email: string | null } | { email: string | null }[] | null;
+  student_profiles:
+    | { display_name: string | null; email: string | null }
+    | { display_name: string | null; email: string | null }[]
+    | null;
   course_themes?: { name: string } | { name: string }[] | null;
   exam_attempt_questions: {
     id: string;
@@ -98,7 +102,13 @@ export function AttemptTable({
                     href={`/admin/tentativas?aluno=${attempt.student_id ?? ""}`}
                     className="hover:text-court hover:underline"
                   >
-                    {student?.email ?? "—"}
+                    {formatStudentIdentity(
+                      {
+                        displayName: student?.display_name ?? null,
+                        email: student?.email ?? null,
+                      },
+                      "",
+                    )}
                   </Link>
                 </td>
                 {showMode && (
@@ -107,7 +117,7 @@ export function AttemptTable({
                   </td>
                 )}
                 <td className="py-2 pr-4 text-muted-foreground">
-                  {attempt.mode === "practice" ? (theme?.name ?? "—") : "—"}
+                  {attempt.mode === "practice" ? (theme?.name ?? "") : ""}
                 </td>
                 <td className="py-2 pr-4">
                   <AttemptStatusBadge status={status} />
@@ -129,7 +139,7 @@ export function AttemptTable({
                     ? Number(attempt.score_0_20).toLocaleString("pt-PT", {
                         minimumFractionDigits: 1,
                       })
-                    : "—"}
+                    : ""}
                 </td>
                 <td className="py-2 pr-4">
                   {finished && attempt.passed !== null ? (
@@ -139,7 +149,7 @@ export function AttemptTable({
                       <Badge variant="destructive">Reprovado</Badge>
                     )
                   ) : (
-                    "—"
+                    ""
                   )}
                 </td>
                 <td className="py-2">

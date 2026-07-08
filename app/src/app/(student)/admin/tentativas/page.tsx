@@ -5,6 +5,7 @@ import {
   type AdminAttemptRow,
 } from "@/components/admin/attempt-table";
 import { requireAdmin } from "@/lib/auth";
+import { formatStudentIdentity } from "@/lib/profile";
 
 const ATTEMPT_SELECT = `
   id,
@@ -17,7 +18,7 @@ const ATTEMPT_SELECT = `
   score_0_20,
   passed,
   blueprint_snapshot,
-  student_profiles ( email ),
+  student_profiles ( display_name, email ),
   course_themes:practice_theme_id ( name ),
   exam_attempt_questions (
     id,
@@ -33,14 +34,19 @@ export default async function AdminAttemptsPage({
   const { tipo, aluno } = await searchParams;
   const { supabase } = await requireAdmin();
 
-  let studentEmail: string | null = null;
+  let studentLabel: string | null = null;
   if (aluno) {
     const { data: student } = await supabase
       .from("student_profiles")
-      .select("email")
+      .select("display_name, email")
       .eq("id", aluno)
       .single();
-    studentEmail = student?.email ?? null;
+    studentLabel = student
+      ? formatStudentIdentity({
+          displayName: student.display_name,
+          email: student.email,
+        })
+      : null;
   }
 
   const buildQuery = (mode?: "exam" | "practice") => {
@@ -116,7 +122,7 @@ export default async function AdminAttemptsPage({
         <p className="text-sm text-muted-foreground">
           A mostrar tentativas de{" "}
           <span className="font-medium text-foreground">
-            {studentEmail ?? "aluno desconhecido"}
+            {studentLabel ?? "aluno desconhecido"}
           </span>
           .
         </p>

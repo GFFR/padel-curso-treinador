@@ -34,7 +34,7 @@ export async function reportQuestion(params: {
   kind: "bug" | "suggestion";
   message: string;
 }): Promise<void> {
-  const { supabase, studentId, email } = await requireStudent();
+  const { supabase, studentId, email, displayName } = await requireStudent();
 
   const { data: row, error } = await supabase
     .from("exam_attempt_questions")
@@ -77,6 +77,7 @@ export async function reportQuestion(params: {
   await notifyAdminOfSupportReport({
     kind: params.kind,
     message: params.message,
+    studentDisplayName: displayName,
     studentEmail: email,
     questionContext: {
       prompt: snapshot.prompt,
@@ -91,7 +92,7 @@ export async function sendSupportMessage(params: {
   kind: "bug" | "suggestion";
   message: string;
 }): Promise<void> {
-  const { supabase, studentId, email } = await requireStudent();
+  const { supabase, studentId, email, displayName } = await requireStudent();
   const { error } = await supabase.from("support_reports").insert({
     student_id: studentId,
     kind: params.kind,
@@ -102,6 +103,7 @@ export async function sendSupportMessage(params: {
   await notifyAdminOfSupportReport({
     kind: params.kind,
     message: params.message,
+    studentDisplayName: displayName,
     studentEmail: email,
   });
 }

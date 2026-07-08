@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { requireAdmin } from "@/lib/auth";
+import { formatStudentIdentity } from "@/lib/profile";
 
 export default async function AdminStudentsPage() {
   const { supabase } = await requireAdmin();
@@ -8,7 +9,7 @@ export default async function AdminStudentsPage() {
   const [{ data: students }, { data: attempts }] = await Promise.all([
     supabase
       .from("student_profiles")
-      .select("id, email, role, created_at")
+      .select("id, display_name, email, role, created_at")
       .order("created_at", { ascending: false }),
     supabase
       .from("exam_attempts")
@@ -37,7 +38,7 @@ export default async function AdminStudentsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-muted-foreground uppercase">
-              <th className="py-2 pr-4 font-medium">Email</th>
+              <th className="py-2 pr-4 font-medium">Aluno</th>
               <th className="py-2 pr-4 font-medium">Registo</th>
               <th className="py-2 pr-4 font-medium">Exames</th>
               <th className="py-2 pr-4 font-medium">Média exames</th>
@@ -58,7 +59,13 @@ export default async function AdminStudentsPage() {
                       href={`/admin/tentativas?aluno=${student.id}`}
                       className="hover:text-court hover:underline"
                     >
-                      {student.email ?? "—"}
+                      {formatStudentIdentity(
+                        {
+                          displayName: student.display_name,
+                          email: student.email,
+                        },
+                        "—",
+                      )}
                     </Link>
                   </td>
                   <td className="py-2 pr-4 text-muted-foreground">

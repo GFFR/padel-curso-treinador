@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { requireAdmin } from "@/lib/auth";
+import { formatStudentIdentity } from "@/lib/profile";
 
 interface ReportedContext {
   prompt?: string;
@@ -13,7 +14,7 @@ export default async function AdminReportsPage() {
   const { data: reports } = await supabase
     .from("support_reports")
     .select(
-      "id, kind, message, question_context, created_at, student_profiles ( email )",
+      "id, kind, message, question_context, created_at, student_profiles ( display_name, email )",
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -45,7 +46,13 @@ export default async function AdminReportsPage() {
                   timeStyle: "short",
                 })}
               </span>
-              <span>· {student?.email ?? "aluno desconhecido"}</span>
+              <span>
+                ·{" "}
+                {formatStudentIdentity({
+                  displayName: student?.display_name ?? null,
+                  email: student?.email ?? null,
+                })}
+              </span>
             </div>
             <p className="mt-3 text-sm">{report.message}</p>
             {context?.prompt && (

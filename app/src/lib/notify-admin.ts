@@ -2,9 +2,12 @@ import "server-only";
 
 import { Resend } from "resend";
 
+import { formatStudentIdentity } from "@/lib/profile";
+
 export interface SupportReportNotification {
   kind: "bug" | "suggestion";
   message: string;
+  studentDisplayName: string | null;
   studentEmail: string | null;
   questionContext?: {
     prompt?: string;
@@ -28,7 +31,10 @@ function buildEmailBody(report: SupportReportNotification): string {
   const kindLabel = report.kind === "bug" ? "Problema" : "Sugestão";
   const lines = [
     `Tipo: ${kindLabel}`,
-    `Aluno: ${report.studentEmail ?? "desconhecido"}`,
+    `Aluno: ${formatStudentIdentity({
+      displayName: report.studentDisplayName,
+      email: report.studentEmail,
+    })}`,
     "",
     report.message,
   ];
@@ -64,7 +70,7 @@ export async function notifyAdminOfSupportReport(
     await resend.emails.send({
       from,
       to: process.env.ADMIN_NOTIFY_EMAIL!,
-      subject: `[Padel Grau I] ${kindLabel} — apoio ao aluno`,
+      subject: `[Padel Grau I] ${kindLabel}  apoio ao aluno`,
       text: buildEmailBody(report),
     });
   } catch (error) {

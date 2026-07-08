@@ -9,6 +9,7 @@ import {
   resolveAttemptStatus,
 } from "@/lib/admin/attempts";
 import { THEME_LABELS, type QuestionSnapshot, type ThemeCode } from "@/lib/domain/types";
+import { formatStudentIdentity } from "@/lib/profile";
 
 interface BlueprintSnapshot {
   totalQuestions: number;
@@ -38,7 +39,7 @@ export default async function AdminAttemptDetailPage({
       score_0_20,
       passed,
       blueprint_snapshot,
-      student_profiles ( email ),
+      student_profiles ( display_name, email ),
       course_themes:practice_theme_id ( name, code )
     `,
     )
@@ -119,7 +120,10 @@ export default async function AdminAttemptDetailPage({
                 href={`/admin/tentativas?aluno=${attempt.student_id}`}
                 className="font-medium hover:text-court hover:underline"
               >
-                {student?.email ?? "aluno desconhecido"}
+                {formatStudentIdentity({
+                  displayName: student?.display_name ?? null,
+                  email: student?.email ?? null,
+                })}
               </Link>
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
