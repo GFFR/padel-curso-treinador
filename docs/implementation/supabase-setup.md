@@ -58,6 +58,37 @@ The seed is idempotent (upserts by theme code); re-run it freely.
 4. Save. The built-in rate limit no longer applies — sends now go through Resend's much
    higher limits, and delivery is typically near-instant.
 
+### 3b. Edit BOTH email templates, not just "Magic Link"
+
+Supabase picks the email template for `signInWithOtp({ email })` based on whether the
+address already has an account, not on any code path we control:
+
+- **Existing user** → **Magic Link** template.
+- **Brand-new email** (the common case — every student's first login) → **Confirm
+  signup** template.
+
+Both are separate, independently-edited tabs under **Authentication → Email Templates**,
+and both default to an English, link-only body. **Edit both templates** to show the
+6-digit code in Portuguese via `{{ .Token }}`, *and* a clickable login link via
+`{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email` — the app supports both:
+type the code, or click through (`src/app/auth/confirm/route.ts` verifies the link
+server-side and redirects to `/painel`). Test with a never-used email address, not one
+you already signed in with once, or you'll only exercise the Magic Link template and
+miss a broken Confirm-signup template.
+
+### 3c. Allow the local dev origin to receive the login link
+
+The app passes `emailRedirectTo: \`${window.location.origin}/auth/confirm\`` on every
+`signInWithOtp` call, so the link in the email points back at whichever origin actually
+made the request (`login-form.tsx`). Supabase only honors a redirect target that's on
+its allowlist — **Authentication → URL Configuration → Redirect URLs** — otherwise it
+silently falls back to the project's Site URL instead.
+
+Add `http://localhost:3789/**` to that allowlist for local dev. Without it, clicking the
+link from a local test tries to redirect to the production Site URL instead of your
+local server. Add the real deployed origin (e.g. `https://yourdomain.com/**`) when you
+go to production.
+
 Student profiles are created automatically by a DB trigger on `auth.users` insert — no
 app code needs to run on first login.
 

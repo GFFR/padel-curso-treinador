@@ -138,12 +138,27 @@ section):
 - **Supabase's built-in mailer caps at ~2 emails/hour** — unusable for testing or real
   students. Backend chain (verify → trigger → RLS) was proven correct anyway via
   `admin.generateLink()` + `verifyOtp()` without sending real email. Permanent fix:
-  custom SMTP via Resend, documented in `docs/implementation/supabase-setup.md` §3a.
+  custom SMTP via Resend, set up live and delivering — documented in
+  `docs/implementation/supabase-setup.md` §3a.
+- **Two email templates, not one**: `signInWithOtp` uses Supabase's "Magic Link"
+  template for an existing user but "Confirm signup" for a brand-new email — the
+  common case, every student's first login. Both default to English/link-only/no code;
+  testing against an already-registered address only exercises Magic Link and hides a
+  broken Confirm-signup. Both now have a Portuguese `{{ .Token }}` body (runbook §3b).
 
-The account `goncaloramalho88@gmail.com` is live and promoted to admin. Full real-browser
-click-through (typing email, receiving a real emailed code) is still pending — do it
-once Resend SMTP is configured, since the built-in mailer can't sustain even one clean
-test.
+The account `goncaloramalho88@gmail.com` is live and promoted to admin. Resend delivery
+confirmed working for both new and existing addresses.
+
+**Added a clickable login link back**, alongside the code (not instead of it) — new
+`/auth/confirm` route handler verifies `token_hash` server-side and redirects to
+`/painel`; `signInWithOtp` now passes a per-request `emailRedirectTo` so the link points
+at whichever origin is actually running rather than the fixed Supabase Site URL
+(`https://padel.goncalofframalho.com/`); `/entrar` surfaces `?erro=link_invalido`.
+Requires the calling origin in Supabase's Redirect URLs allowlist (runbook §3c — add
+`http://localhost:3789/**` for local dev). See decision 0010 for the full writeup.
+
+Full real-browser click-through (both the code path and the link path, with a
+first-time email) is the last verification step.
 
 ## Post-MVP backlog
 

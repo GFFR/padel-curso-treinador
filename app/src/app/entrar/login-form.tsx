@@ -10,20 +10,31 @@ import { createClient } from "@/lib/supabase/client";
 
 type Step = "email" | "code";
 
-export function LoginForm() {
+export function LoginForm({
+  initialError,
+}: {
+  initialError?: string;
+} = {}) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError ?? null);
 
   async function sendCode(event: React.FormEvent) {
     event.preventDefault();
     setPending(true);
     setError(null);
     const supabase = createClient();
-    const { error: otpError } = await supabase.auth.signInWithOtp({ email });
+    // Also lets the student click the link in the email instead of typing
+    // the code — handled by src/app/auth/confirm/route.ts. Points at
+    // whichever origin is actually running (dev or prod), not a fixed
+    // Supabase "Site URL" setting.
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+    });
     setPending(false);
     if (otpError) {
       setError(

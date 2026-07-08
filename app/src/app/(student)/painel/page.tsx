@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { StudyModeChooser } from "@/components/shared/study-mode-chooser";
 import { requireStudent } from "@/lib/auth";
 import { startExam } from "@/lib/actions/exam-actions";
-import { EXAM_DURATION_MINUTES, EXAM_TOTAL_QUESTIONS } from "@/lib/domain/types";
 
 export const metadata: Metadata = {
   title: "Painel — Padel Grau I",
@@ -48,45 +47,10 @@ export default async function DashboardPage() {
         </p>
       </section>
 
-      {/* Court-styled mode chooser (signature element, decision 0002) */}
-      <section aria-label="Modos de estudo">
-        <div className="overflow-hidden rounded-xl border-2 border-court-line/90 bg-court shadow-lg">
-          <div className="grid sm:grid-cols-2">
-            <div className="relative border-b-2 border-court-line/90 p-8 sm:border-r-2 sm:border-b-0">
-              <h2 className="font-heading text-3xl font-semibold text-court-line uppercase">
-                Simular exame
-              </h2>
-              <p className="mt-2 max-w-xs text-sm text-court-line/80">
-                {EXAM_TOTAL_QUESTIONS} perguntas, {EXAM_DURATION_MINUTES}{" "}
-                minutos, escala de 0 a 20. Respostas reveladas no fim.
-              </p>
-              <form action={startFullExam} className="mt-5">
-                <Button
-                  type="submit"
-                  className="bg-ball font-medium text-court-deep hover:bg-ball/90"
-                >
-                  Começar exame
-                </Button>
-              </form>
-            </div>
-            <div className="relative p-8">
-              <h2 className="font-heading text-3xl font-semibold text-court-line uppercase">
-                Praticar por tema
-              </h2>
-              <p className="mt-2 max-w-xs text-sm text-court-line/80">
-                Sessões livres, sem relógio, com resposta e explicação
-                imediatas.
-              </p>
-              <Button
-                render={<Link href="/praticar" />}
-                className="mt-5 bg-court-line font-medium text-court hover:bg-court-line/90"
-              >
-                Escolher tema
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <StudyModeChooser
+        variant="student"
+        startExamAction={startFullExam}
+      />
 
       <section aria-label="Histórico">
         <h3 className="text-xs font-medium tracking-widest text-muted-foreground uppercase">

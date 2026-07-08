@@ -67,6 +67,44 @@ it no longer has a `student_profiles` row so it can't sign in as anyone with dat
    RLS correctly scopes a self-read using the returned session token. Permanent fix:
    custom SMTP (Resend) documented in `docs/implementation/supabase-setup.md` §3a —
    removes the cap entirely, not just a testing workaround.
+3. **Two separate email templates, not one.** `signInWithOtp` uses Supabase's "Magic
+   Link" template for an existing user but the "Confirm signup" template for a brand-new
+   email (the common case — every student's first login). Both default to English,
+   link-only bodies with no visible code, and editing only one is invisible until tested
+   with a never-used address: an already-registered test email (fixed after editing
+   Magic Link) kept masking that Confirm signup was still broken for first-time
+   students. Both now carry a Portuguese `{{ .Token }}` body (§3b of the runbook).
+
+## Added after the fact: clickable login link
+
+The plan originally dropped the email link entirely (decision text above: "no signup
+page, no confirm-route handler... no password fields anywhere") on the reasoning that
+code-entry alone was simpler and the app had nothing to handle a link click. In practice
+the code-only emails read as broken to a first-time recipient — a "Confirm your email"
+subject with only a code and no visible action reads like something's missing — so the
+link was added back as a convenience alongside the code, not a replacement.
+
+Implementation, verified empirically before writing any code (`verifyOtp` with a
+`token_hash` behaves identically to the plain 6-digit code — same underlying OTP record,
+just a different encoding, confirmed via `admin.generateLink` + `verifyOtp` against a
+disposable test address):
+
+- **`src/app/auth/confirm/route.ts`** (new): reads `token_hash` + `type` from the query
+  string, calls `supabase.auth.verifyOtp({ type, token_hash })` server-side (establishes
+  the session cookie via the existing SSR server client), redirects to `/painel` on
+  success or `/entrar?erro=link_invalido` on failure.
+- **`login-form.tsx`**: `signInWithOtp` now passes
+  `options: { emailRedirectTo: \`${window.location.origin}/auth/confirm\` }` — the link
+  points at whichever origin actually made the request, not a fixed Supabase "Site URL".
+  This matters because the project's Site URL is already set to a real domain
+  (`https://padel.goncalofframalho.com/`), not localhost; without the per-call override,
+  every email link would point at production even during local testing.
+- **`/entrar`**: reads `?erro=link_invalido` and surfaces it as the existing error
+  banner via a new `LoginForm({ initialError })` prop, instead of failing silently.
+- Both email templates get a second CTA below the code:
+  `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`.
+- Requires the calling origin to be in Supabase's **Redirect URLs** allowlist (runbook
+  §3c) or Supabase silently ignores `emailRedirectTo` and falls back to Site URL.
 
 ## Left alone
 

@@ -13,7 +13,17 @@ export const metadata: Metadata = {
 // Reads the session cookie when Supabase is configured — never prerender.
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string }>;
+}) {
+  const { erro } = await searchParams;
+  const initialError =
+    erro === "link_invalido"
+      ? "O link é inválido ou expirou. Pede um novo código."
+      : undefined;
+
   const configured = isSupabaseConfigured();
   if (configured) {
     const supabase = await createClient();
@@ -54,7 +64,7 @@ export default async function LoginPage() {
         </p>
         <div className="mt-8">
           {configured ? (
-            <LoginForm />
+            <LoginForm initialError={initialError} />
           ) : (
             <div className="rounded-lg border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
               O acesso ainda não está disponível: falta configurar o backend
