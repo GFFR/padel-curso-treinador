@@ -91,7 +91,7 @@ export default async function DashboardPage() {
                       <p className="text-xs text-muted-foreground">{date}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      {attempt.mode === "exam" && attempt.submitted_at && (
+                      {attempt.submitted_at && (
                         <span className="font-heading text-lg font-semibold text-court">
                           {Number(attempt.score_0_20).toLocaleString("pt-PT", {
                             minimumFractionDigits: 1,
@@ -101,11 +101,13 @@ export default async function DashboardPage() {
                       {attempt.mode === "exam" &&
                         (open ? (
                           <Badge className="bg-ball text-court-deep">Em curso</Badge>
-                        ) : attempt.passed ? (
-                          <Badge className="bg-court text-court-line">Aprovado</Badge>
-                        ) : (
-                          <Badge variant="destructive">Reprovado</Badge>
-                        ))}
+                        ) : attempt.submitted_at ? (
+                          attempt.passed ? (
+                            <Badge className="bg-court text-court-line">Aprovado</Badge>
+                          ) : (
+                            <Badge variant="destructive">Reprovado</Badge>
+                          )
+                        ) : null)}
                     </div>
                   </Link>
                 </li>

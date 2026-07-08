@@ -101,3 +101,18 @@ export async function submitExam(attemptId: string): Promise<void> {
   await submitExamAttempt(supabase, attemptId);
   redirect(`/exame/${attemptId}/resultado`);
 }
+
+export interface PracticeSubmitResult {
+  score0to20: number;
+  passed: boolean;
+  correctCount: number;
+  totalQuestions: number;
+}
+
+/** Persists score when a practice session ends so admin metrics can aggregate it. */
+export async function submitPractice(
+  attemptId: string,
+): Promise<PracticeSubmitResult> {
+  const { supabase } = await requireStudent();
+  return submitExamAttempt(supabase, attemptId);
+}

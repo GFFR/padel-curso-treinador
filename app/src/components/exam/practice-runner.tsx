@@ -4,7 +4,12 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { answerQuestion, type AnswerResult } from "@/lib/actions/exam-actions";
+import {
+  answerQuestion,
+  submitPractice,
+  type AnswerResult,
+  type PracticeSubmitResult,
+} from "@/lib/actions/exam-actions";
 import { cn } from "@/lib/utils";
 import { OPTION_LETTERS, type RunnerQuestion } from "./types";
 import { QuestionStatusBadge } from "./question-status-badge";
@@ -26,6 +31,7 @@ export function PracticeRunner({
   const [current, setCurrent] = useState(0);
   const [reveals, setReveals] = useState<Record<string, Reveal>>({});
   const [finished, setFinished] = useState(false);
+  const [result, setResult] = useState<PracticeSubmitResult | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const question = questions[current];
@@ -50,19 +56,33 @@ export function PracticeRunner({
     });
   }
 
+  function finishSession() {
+    startTransition(async () => {
+      const submitted = await submitPractice(attemptId);
+      setResult(submitted);
+      setFinished(true);
+    });
+  }
+
   if (finished) {
-    const answered = Object.values(reveals);
-    const correct = answered.filter((r) => r.isCorrect).length;
+    const correct = result?.correctCount ?? 0;
+    const total = result?.totalQuestions ?? questions.length;
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
         <h1 className="font-heading text-6xl font-bold uppercase">
-          {correct}/{questions.length}
+          {correct}/{total}
         </h1>
+        {result && (
+          <p className="font-heading text-2xl font-semibold text-court">
+            {result.score0to20.toLocaleString("pt-PT", {
+              minimumFractionDigits: 1,
+            })}{" "}
+            / 20
+          </p>
+        )}
         <p className="text-muted-foreground">
           Sessão de prática de {themeName} concluída
-          {answered.length < questions.length &&
-            ` (${questions.length - answered.length} perguntas saltadas)`}
-          .
+          {correct < total && ` (${total - correct} incorretas ou saltadas)`}.
         </p>
         <div className="flex justify-center gap-3">
           <Button render={<Link href="/praticar" />}>Praticar outro tema</Button>
@@ -189,7 +209,9 @@ export function PracticeRunner({
             {reveal ? "Seguinte" : "Saltar"}
           </Button>
         ) : (
-          <Button onClick={() => setFinished(true)}>Terminar sessão</Button>
+          <Button onClick={finishSession} disabled={isPending}>
+            {isPending ? "A guardar…" : "Terminar sessão"}
+          </Button>
         )}
       </div>
     </div>
