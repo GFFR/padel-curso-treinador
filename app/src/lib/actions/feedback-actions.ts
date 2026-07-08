@@ -2,6 +2,7 @@
 
 import { requireStudent } from "@/lib/auth";
 import type { QuestionSnapshot } from "@/lib/domain/types";
+import { notifyAdminOfSupportReport } from "@/lib/notify-admin";
 
 /** Thumbs up/down on a question — one row per (student, question), toggled. */
 export async function setQuestionFeedback(params: {
@@ -33,7 +34,7 @@ export async function reportQuestion(params: {
   kind: "bug" | "suggestion";
   message: string;
 }): Promise<void> {
-  const { supabase, studentId } = await requireStudent();
+  const { supabase, studentId, email } = await requireStudent();
 
   const { data: row, error } = await supabase
     .from("exam_attempt_questions")
@@ -72,6 +73,17 @@ export async function reportQuestion(params: {
   if (insertError) {
     throw new Error(`Não foi possível enviar o reporte: ${insertError.message}`);
   }
+
+  await notifyAdminOfSupportReport({
+    kind: params.kind,
+    message: params.message,
+    studentEmail: email,
+    questionContext: {
+      prompt: snapshot.prompt,
+      themeCode: snapshot.themeCode,
+      selectedOptionIndex: answer?.selected_option_index ?? null,
+    },
+  });
 }
 
 /** General support message from anywhere in the app (no question context). */
@@ -79,11 +91,17 @@ export async function sendSupportMessage(params: {
   kind: "bug" | "suggestion";
   message: string;
 }): Promise<void> {
-  const { supabase, studentId } = await requireStudent();
+  const { supabase, studentId, email } = await requireStudent();
   const { error } = await supabase.from("support_reports").insert({
     student_id: studentId,
     kind: params.kind,
     message: params.message,
   });
   if (error) throw new Error(`Não foi possível enviar a mensagem: ${error.message}`);
+
+  await notifyAdminOfSupportReport({
+    kind: params.kind,
+    message: params.message,
+    studentEmail: email,
+  });
 }

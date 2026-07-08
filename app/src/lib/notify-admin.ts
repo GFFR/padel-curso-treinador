@@ -25,7 +25,7 @@ function adminReportsUrl(): string {
 }
 
 function buildEmailBody(report: SupportReportNotification): string {
-  const kindLabel = report.kind === "bug" ? "Problema" : "Sugest„o";
+  const kindLabel = report.kind === "bug" ? "Problema" : "Sugest√£o";
   const lines = [
     `Tipo: ${kindLabel}`,
     `Aluno: ${report.studentEmail ?? "desconhecido"}`,
@@ -37,7 +37,7 @@ function buildEmailBody(report: SupportReportNotification): string {
   if (ctx?.prompt) {
     lines.push("", "--- Pergunta ---", `[${ctx.themeCode ?? "?"}] ${ctx.prompt}`);
     if (ctx.selectedOptionIndex != null) {
-      lines.push(`Resposta do aluno: opÁ„o ${ctx.selectedOptionIndex + 1}`);
+      lines.push(`Resposta do aluno: op√ß√£o ${ctx.selectedOptionIndex + 1}`);
     }
   }
 
@@ -55,7 +55,7 @@ export async function notifyAdminOfSupportReport(
 ): Promise<void> {
   if (!isNotifyConfigured()) return;
 
-  const kindLabel = report.kind === "bug" ? "Problema" : "Sugest„o";
+  const kindLabel = report.kind === "bug" ? "Problema" : "Sugest√£o";
   const from =
     process.env.RESEND_FROM_EMAIL ?? "Padel Grau I <onboarding@resend.dev>";
 
@@ -64,7 +64,7 @@ export async function notifyAdminOfSupportReport(
     await resend.emails.send({
       from,
       to: process.env.ADMIN_NOTIFY_EMAIL!,
-      subject: `[Padel Grau I] ${kindLabel} ó apoio ao aluno`,
+      subject: `[Padel Grau I] ${kindLabel} ‚Äî apoio ao aluno`,
       text: buildEmailBody(report),
     });
   } catch (error) {
