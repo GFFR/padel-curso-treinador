@@ -25,7 +25,10 @@ export default async function StudentLayout({
           </Link>
           <nav className="flex items-center gap-5 text-sm">
             <Link href="/painel" className="hover:text-court">
-              Painel
+              Início
+            </Link>
+            <Link href="/exame" className="hover:text-court">
+              Novo exame
             </Link>
             <Link href="/praticar" className="hover:text-court">
               Praticar

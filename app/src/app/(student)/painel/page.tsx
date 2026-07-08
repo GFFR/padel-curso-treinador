@@ -7,7 +7,7 @@ import { requireStudent } from "@/lib/auth";
 import { startExam } from "@/lib/actions/exam-actions";
 
 export const metadata: Metadata = {
-  title: "Painel — Padel Grau I",
+  title: "Início — Padel Grau I",
 };
 
 interface AttemptRow {
