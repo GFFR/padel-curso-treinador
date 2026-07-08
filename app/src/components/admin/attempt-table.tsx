@@ -59,7 +59,7 @@ export function AttemptTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border text-left text-xs text-muted-foreground uppercase">
-            <th className="py-2 pr-4 font-medium">Inùcio</th>
+            <th className="py-2 pr-4 font-medium">In√≠cio</th>
             <th className="py-2 pr-4 font-medium">Aluno</th>
             {showMode && <th className="py-2 pr-4 font-medium">Tipo</th>}
             <th className="py-2 pr-4 font-medium">Tema</th>
@@ -98,16 +98,16 @@ export function AttemptTable({
                     href={`/admin/tentativas?aluno=${attempt.student_id ?? ""}`}
                     className="hover:text-court hover:underline"
                   >
-                    {student?.email ?? "ù"}
+                    {student?.email ?? "‚Äî"}
                   </Link>
                 </td>
                 {showMode && (
                   <td className="py-2 pr-4 text-muted-foreground">
-                    {attempt.mode === "exam" ? "Exame" : "Prùtica"}
+                    {attempt.mode === "exam" ? "Exame" : "Pr√°tica"}
                   </td>
                 )}
                 <td className="py-2 pr-4 text-muted-foreground">
-                  {attempt.mode === "practice" ? (theme?.name ?? "ù") : "ù"}
+                  {attempt.mode === "practice" ? (theme?.name ?? "‚Äî") : "‚Äî"}
                 </td>
                 <td className="py-2 pr-4">
                   <AttemptStatusBadge status={status} />
@@ -129,7 +129,7 @@ export function AttemptTable({
                     ? Number(attempt.score_0_20).toLocaleString("pt-PT", {
                         minimumFractionDigits: 1,
                       })
-                    : "ù"}
+                    : "‚Äî"}
                 </td>
                 <td className="py-2 pr-4">
                   {finished && attempt.passed !== null ? (
@@ -139,7 +139,7 @@ export function AttemptTable({
                       <Badge variant="destructive">Reprovado</Badge>
                     )
                   ) : (
-                    "ù"
+                    "‚Äî"
                   )}
                 </td>
                 <td className="py-2">

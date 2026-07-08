@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 import { requireStudent } from "@/lib/auth";
-import { LogoutButton } from "@/components/shared/logout-button";
+import { getAvatarPublicUrl } from "@/lib/profile";
+import { StudentUserMenu } from "@/components/shared/student-user-menu";
 import { SupportBubble } from "@/components/shared/support-bubble";
 
 // Session-dependent pages must never be prerendered (a build without env vars
@@ -11,7 +12,8 @@ export const dynamic = "force-dynamic";
 export default async function StudentLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const { role } = await requireStudent();
+  const { role, displayName, email, avatarPath } = await requireStudent();
+  const avatarUrl = getAvatarPublicUrl(avatarPath);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -38,7 +40,11 @@ export default async function StudentLayout({
                 Admin
               </Link>
             )}
-            <LogoutButton />
+            <StudentUserMenu
+              displayName={displayName!}
+              email={email}
+              avatarUrl={avatarUrl}
+            />
           </nav>
         </div>
       </header>

@@ -11,7 +11,7 @@ The application lives in `app/` (Next.js 16 App Router, TypeScript, Tailwind 4, 
 ## Commands (run inside `app/`)
 
 - `npm run dev` — dev server; `npm run build` + `npm start` — production
-- `npm run lint` — ESLint; `npx tsc --noEmit` — typecheck
+- `npm run lint` — ESLint; `npm run check:utf8` — fail on non-UTF-8 source (runs before `build`); `npx tsc --noEmit` — typecheck
 - `npm test` — vitest (domain logic: blueprint, scoring, assembly)
 - `npm run ingest -- --theme ED [--dry-run] [--scope presentations_only]` — ingestion
   pipeline (dry-run needs no keys; full run needs Supabase + `ANTHROPIC_API_KEY`, see `app/.env.example`)

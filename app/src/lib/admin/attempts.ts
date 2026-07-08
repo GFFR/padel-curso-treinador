@@ -54,7 +54,7 @@ export function computeAttemptProgress(
 }
 
 export const ATTEMPT_STATUS_LABELS: Record<AttemptStatus, string> = {
-  concluido: "Concluído",
+  concluido: "ConcluÃ­do",
   em_curso: "Em curso",
   expirado: "Expirado",
 };

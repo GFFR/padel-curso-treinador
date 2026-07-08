@@ -1,0 +1,28 @@
+---
+description: Dev workflow — UTF-8, build gate, deploy safety
+alwaysApply: true
+---
+
+# Dev workflow (padel exam app)
+
+## Encoding
+
+All files under `app/` must be **UTF-8**. Latin-1 (`0xED` for í) or Windows-1252 (`0x97` for —) breaks Nixpacks/Turbopack with `stream did not contain valid UTF-8` even when `npm run dev` works locally.
+
+Portuguese UI strings: use literal UTF-8 (`Concluído`, `Prática`, `Não`, em dash `—`).
+
+## Before done
+
+From `app/`:
+
+1. `npm run check:utf8`
+2. `npm run lint`
+3. `npx tsc --noEmit`
+4. `npm run build` (runs `check:utf8` via `prebuild`)
+
+## Project layout
+
+- Application: `app/` (Next.js 16)
+- Domain glossary: `CONTEXT.md`
+- Build brief: `docs/ai-agent-implementation/IMPLEMENTATION_BRIEF.md`
+- Do not expand scope; match existing code style

@@ -10,6 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "check:utf8": "tsx scripts/check-utf8.ts",
+    "prebuild": "npm run check:utf8",
     "test": "vitest run",
     "test:watch": "vitest",
     "ingest": "tsx scripts/ingestion/run-ingestion.ts",

@@ -6,7 +6,7 @@ import {
 
 export function AttemptStatusBadge({ status }: { status: AttemptStatus }) {
   if (status === "concluido") {
-    return <Badge className="bg-court text-court-line">Concluído</Badge>;
+    return <Badge className="bg-court text-court-line">ConcluÃ­do</Badge>;
   }
   if (status === "expirado") {
     return <Badge variant="destructive">Expirado</Badge>;

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { isOnboardingComplete } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./login-form";
 
@@ -37,10 +38,16 @@ export default async function LoginPage({
     if (user) {
       const { data: profile } = await supabase
         .from("student_profiles")
-        .select("id")
+        .select("id, display_name")
         .eq("auth_user_id", user.id)
         .single();
-      if (profile) redirect("/painel");
+      if (profile) {
+        redirect(
+          isOnboardingComplete({ displayName: profile.display_name })
+            ? "/painel"
+            : "/bem-vindo",
+        );
+      }
     }
   }
 

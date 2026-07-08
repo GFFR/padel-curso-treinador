@@ -2,6 +2,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getPostAuthRedirectPath } from "@/lib/post-auth-redirect";
 
 /**
  * Handles the clickable link sent alongside the code in the "Confirm signup"
@@ -18,7 +19,8 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
     if (!error) {
-      return NextResponse.redirect(`${origin}/painel`);
+      const destination = await getPostAuthRedirectPath();
+      return NextResponse.redirect(`${origin}${destination}`);
     }
   }
 

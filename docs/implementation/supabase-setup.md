@@ -24,7 +24,8 @@ psql "$SUPABASE_DB_URL" -f supabase/seed.sql   # or paste seed.sql in the SQL ed
 ```
 
 Option B — SQL editor: paste `supabase/migrations/00001_init.sql`, then `00002_rls.sql`,
-then `00003_email_auth.sql`, then `seed.sql` into the dashboard SQL editor and run them in
+then `00003_email_auth.sql`, then `00004_question_bank_sets.sql`, then
+`00005_student_profile_onboarding.sql`, then `seed.sql` into the dashboard SQL editor and run them in
 that order.
 
 The seed is idempotent (upserts by theme code); re-run it freely.

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { isOnboardingComplete } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/client";
 
 type Step = "email" | "code";
@@ -60,7 +61,23 @@ export function LoginForm({
       setError("Código inválido ou expirado. Tenta novamente.");
       return;
     }
-    router.push("/painel");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setError("Sessão inválida. Tenta novamente.");
+      return;
+    }
+    const { data: profile } = await supabase
+      .from("student_profiles")
+      .select("display_name")
+      .eq("auth_user_id", user.id)
+      .single();
+    router.push(
+      isOnboardingComplete({ displayName: profile?.display_name ?? null })
+        ? "/painel"
+        : "/bem-vindo",
+    );
     router.refresh();
   }
 
