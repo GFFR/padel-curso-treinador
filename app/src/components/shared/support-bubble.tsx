@@ -27,9 +27,9 @@ export function SupportBubble() {
   }
 
   return (
-    <div className="fixed right-5 bottom-5 z-50 flex flex-col items-end gap-3">
+    <div className="fixed right-4 bottom-safe-fab z-50 flex flex-col items-end gap-3 sm:right-5">
       {open && (
-        <div className="w-80 rounded-xl border border-border bg-card p-4 shadow-lg">
+        <div className="w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-border bg-card p-4 shadow-lg">
           {sent ? (
             <div className="space-y-3 text-sm">
               <p className="font-medium">Mensagem enviada — obrigado!</p>
@@ -96,7 +96,7 @@ export function SupportBubble() {
         aria-label="Apoio"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="font-heading flex size-12 items-center justify-center rounded-full bg-court text-xl font-bold text-court-line shadow-lg transition-transform hover:scale-105"
+        className="font-heading flex size-11 items-center justify-center rounded-full bg-court text-xl font-bold text-court-line shadow-lg transition-transform hover:scale-105 sm:size-12"
       >
         ?
       </button>

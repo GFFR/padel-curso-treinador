@@ -55,7 +55,7 @@ export function FeedbackBar({
           aria-pressed={vote === "thumbs_up"}
           onClick={() => castVote("thumbs_up")}
           className={cn(
-            "rounded-md border px-2 py-1 text-sm transition-colors",
+            "rounded-md border px-2.5 py-1.5 text-sm transition-colors sm:px-2 sm:py-1",
             vote === "thumbs_up"
               ? "border-court bg-court/10"
               : "border-border hover:bg-muted",
@@ -69,7 +69,7 @@ export function FeedbackBar({
           aria-pressed={vote === "thumbs_down"}
           onClick={() => castVote("thumbs_down")}
           className={cn(
-            "rounded-md border px-2 py-1 text-sm transition-colors",
+            "rounded-md border px-2.5 py-1.5 text-sm transition-colors sm:px-2 sm:py-1",
             vote === "thumbs_down"
               ? "border-destructive bg-destructive/10"
               : "border-border hover:bg-muted",

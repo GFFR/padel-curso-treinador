@@ -19,6 +19,12 @@ export const metadata: Metadata = {
     "Plataforma de estudo para o exame do Curso de Treinador de Padel Grau I: simulações de exame e prática por tema.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

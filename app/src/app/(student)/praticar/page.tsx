@@ -23,7 +23,7 @@ export default async function PracticePage() {
   return (
     <div className="space-y-8">
       <section>
-        <h1 className="font-heading text-5xl font-bold uppercase">
+        <h1 className="font-heading text-3xl font-bold uppercase sm:text-5xl">
           Praticar por tema<span className="text-ball">.</span>
         </h1>
         <p className="mt-2 max-w-xl text-muted-foreground">
@@ -40,7 +40,7 @@ export default async function PracticePage() {
           return (
             <li
               key={theme.id}
-              className="flex flex-col justify-between rounded-xl border border-border bg-card p-6"
+              className="flex flex-col justify-between rounded-xl border border-border bg-card p-4 sm:p-6"
             >
               <div>
                 <div className="flex items-baseline justify-between gap-3">

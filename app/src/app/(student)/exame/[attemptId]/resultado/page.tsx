@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FeedbackBar } from "@/components/exam/feedback-bar";
-import { QuestionStatusBadge } from "@/components/exam/question-status-badge";
+import { QuestionPromptHeader } from "@/components/exam/question-prompt-header";
 import { OPTION_LETTERS } from "@/components/exam/types";
 import { requireStudent } from "@/lib/auth";
 import { signMaterialUrls } from "@/lib/materials";
@@ -101,16 +101,16 @@ export default async function ResultPage({
   });
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8 sm:space-y-12">
       {/* Scoreboard */}
-      <section className="overflow-hidden rounded-xl border-2 border-court-line/90 bg-court-deep p-8 text-court-line shadow-lg sm:p-10">
+      <section className="overflow-hidden rounded-xl border-2 border-court-line/90 bg-court-deep p-6 text-court-line shadow-lg sm:p-10">
         <p className="text-sm font-medium tracking-widest text-court-line/70 uppercase">
           Resultado do exame
         </p>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-6">
-          <p className="font-heading text-8xl leading-none font-bold">
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-4 sm:gap-6">
+          <p className="font-heading text-5xl leading-none font-bold sm:text-8xl">
             {score}
-            <span className="text-3xl text-court-line/60"> / 20</span>
+            <span className="text-2xl text-court-line/60 sm:text-3xl"> / 20</span>
           </p>
           {attempt.passed ? (
             <Badge className="bg-ball px-3 py-1 text-base font-semibold text-court-deep">
@@ -158,17 +158,19 @@ export default async function ResultPage({
         {items.map((item, index) => (
           <article
             key={item.id}
-            className="rounded-xl border border-border bg-card p-6"
+            className="rounded-xl border border-border bg-card p-4 sm:p-6"
           >
-            <div className="flex items-start justify-between gap-4">
-              <p className="font-medium">
-                <span className="text-muted-foreground tabular-nums">
-                  {index + 1}.
-                </span>{" "}
-                {item.snapshot.prompt}
-              </p>
-              <QuestionStatusBadge status={item.snapshot.status} />
-            </div>
+            <QuestionPromptHeader
+              prompt={
+                <>
+                  <span className="text-muted-foreground tabular-nums">
+                    {index + 1}.
+                  </span>{" "}
+                  {item.snapshot.prompt}
+                </>
+              }
+              status={item.snapshot.status}
+            />
             <ul className="mt-4 space-y-1.5">
               {item.snapshot.options.map((option) => {
                 const isCorrectOption =
@@ -244,7 +246,7 @@ export default async function ResultPage({
         ))}
       </section>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <Button render={<Link href="/painel" />}>Voltar ao painel</Button>
         <Button variant="outline" render={<Link href="/praticar" />}>
           Praticar temas fracos

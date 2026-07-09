@@ -166,3 +166,17 @@
     animation: none;
   }
 }
+
+@layer utilities {
+  .bottom-safe-fab {
+    bottom: max(1rem, calc(env(safe-area-inset-bottom) + 0.75rem));
+  }
+
+  .bottom-safe-nav {
+    bottom: max(4.5rem, calc(env(safe-area-inset-bottom) + 4rem));
+  }
+
+  .pb-safe-fab {
+    padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem));
+  }
+}

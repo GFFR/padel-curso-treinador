@@ -7,7 +7,10 @@ import { Badge } from "@/components/ui/badge";
 export function QuestionStatusBadge({ status }: { status: string }) {
   if (status === "approved") return null;
   return (
-    <Badge variant="outline" className="text-muted-foreground">
+    <Badge
+      variant="outline"
+      className="mb-3 h-auto max-w-full py-1 whitespace-normal text-muted-foreground"
+    >
       Gerada por IA — por rever
     </Badge>
   );

@@ -26,7 +26,7 @@ export default async function NewExamPage() {
   return (
     <div className="space-y-8">
       <section>
-        <h1 className="font-heading text-5xl font-bold uppercase">
+        <h1 className="font-heading text-3xl font-bold uppercase sm:text-5xl">
           Novo exame<span className="text-ball">.</span>
         </h1>
         <p className="mt-2 max-w-xl text-muted-foreground">
@@ -37,7 +37,7 @@ export default async function NewExamPage() {
         </p>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-6">
+      <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
         <h2 className="font-heading text-2xl font-semibold uppercase">
           Distribuição por tema
         </h2>

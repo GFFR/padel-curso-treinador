@@ -17,10 +17,12 @@ export function StudentUserMenu({
   displayName,
   email,
   avatarUrl,
+  compact = false,
 }: {
   displayName: string;
   email: string | null;
   avatarUrl: string | null;
+  compact?: boolean;
 }) {
   const router = useRouter();
 
@@ -32,13 +34,20 @@ export function StudentUserMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50">
+      <DropdownMenuTrigger
+        className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+        aria-label={compact ? displayName : undefined}
+      >
         <Avatar size="sm">
           {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
           <AvatarFallback>{getProfileInitials(displayName, email)}</AvatarFallback>
         </Avatar>
-        <span className="max-w-32 truncate font-medium">{displayName}</span>
-        <ChevronDown className="size-4 text-muted-foreground" />
+        {!compact && (
+          <>
+            <span className="max-w-32 truncate font-medium">{displayName}</span>
+            <ChevronDown className="size-4 text-muted-foreground" />
+          </>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-40">
         <DropdownMenuItem onClick={() => router.push("/perfil")}>

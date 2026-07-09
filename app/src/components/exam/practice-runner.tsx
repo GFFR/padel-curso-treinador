@@ -12,7 +12,7 @@ import {
 } from "@/lib/actions/exam-actions";
 import { cn } from "@/lib/utils";
 import { OPTION_LETTERS, type RunnerQuestion } from "./types";
-import { QuestionStatusBadge } from "./question-status-badge";
+import { QuestionPromptHeader } from "./question-prompt-header";
 import { FeedbackBar } from "./feedback-bar";
 
 interface Reveal extends AnswerResult {
@@ -69,7 +69,7 @@ export function PracticeRunner({
     const total = result?.totalQuestions ?? questions.length;
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
-        <h1 className="font-heading text-6xl font-bold uppercase">
+        <h1 className="font-heading text-5xl font-bold uppercase sm:text-6xl">
           {correct}/{total}
         </h1>
         {result && (
@@ -95,7 +95,7 @@ export function PracticeRunner({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 pb-safe-fab sm:space-y-8 sm:pb-0">
       <div className="flex items-baseline justify-between gap-4">
         <p className="text-xs tracking-widest text-muted-foreground uppercase">
           Prática · {themeName}
@@ -105,11 +105,11 @@ export function PracticeRunner({
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8">
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-lg font-medium">{question.prompt}</p>
-          <QuestionStatusBadge status={question.status} />
-        </div>
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-8">
+        <QuestionPromptHeader
+          prompt={question.prompt}
+          status={question.status}
+        />
         <div className="mt-6 space-y-2">
           {question.options.map((option) => {
             const isSelected = reveal?.selectedOptionIndex === option.index;
@@ -130,7 +130,7 @@ export function PracticeRunner({
               >
                 <span
                   className={cn(
-                    "font-heading mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-sm font-semibold",
+                    "font-heading mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold sm:size-6",
                     reveal && isCorrectOption
                       ? "border-court bg-court text-court-line"
                       : "border-border text-muted-foreground",
@@ -196,23 +196,25 @@ export function PracticeRunner({
         )}
       </div>
 
-      <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          disabled={current === 0}
-          onClick={() => setCurrent((i) => i - 1)}
-        >
-          Anterior
-        </Button>
-        {current < questions.length - 1 ? (
-          <Button onClick={() => setCurrent((i) => i + 1)}>
-            {reveal ? "Seguinte" : "Saltar"}
+      <div className="sticky bottom-safe-nav z-40 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+        <div className="flex items-center justify-between gap-3">
+          <Button
+            variant="outline"
+            disabled={current === 0}
+            onClick={() => setCurrent((i) => i - 1)}
+          >
+            Anterior
           </Button>
-        ) : (
-          <Button onClick={finishSession} disabled={isPending}>
-            {isPending ? "A guardar…" : "Terminar sessão"}
-          </Button>
-        )}
+          {current < questions.length - 1 ? (
+            <Button onClick={() => setCurrent((i) => i + 1)}>
+              {reveal ? "Seguinte" : "Saltar"}
+            </Button>
+          ) : (
+            <Button onClick={finishSession} disabled={isPending}>
+              {isPending ? "A guardar…" : "Terminar sessão"}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

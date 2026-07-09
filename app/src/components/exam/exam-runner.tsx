@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { answerQuestion, submitExam } from "@/lib/actions/exam-actions";
 import { cn } from "@/lib/utils";
 import { OPTION_LETTERS, type RunnerQuestion } from "./types";
-import { QuestionStatusBadge } from "./question-status-badge";
+import { QuestionPromptHeader } from "./question-prompt-header";
 
 function formatRemaining(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -32,6 +32,7 @@ export function ExamRunner({
   );
   const [isSubmitting, startSubmit] = useTransition();
   const autoSubmitted = useRef(false);
+  const paginationRef = useRef<HTMLDivElement>(null);
 
   const answeredCount = useMemo(
     () => questions.filter((q) => q.selectedOptionIndex !== null).length,
@@ -50,6 +51,17 @@ export function ExamRunner({
     }, 1000);
     return () => clearInterval(interval);
   }, [expiresAt, attemptId]);
+
+  useEffect(() => {
+    const active = paginationRef.current?.querySelector(
+      '[aria-current="true"]',
+    );
+    active?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [current]);
 
   const question = questions[current];
 
@@ -72,18 +84,16 @@ export function ExamRunner({
   const lowTime = remaining < 5 * 60 * 1000;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-xs tracking-widest text-muted-foreground uppercase">
-            Pergunta {current + 1} de {questions.length} · {answeredCount}{" "}
-            respondidas
-          </p>
-        </div>
+    <div className="space-y-5 pb-safe-fab sm:space-y-8 sm:pb-0">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs tracking-widest text-muted-foreground uppercase">
+          Pergunta {current + 1} de {questions.length} · {answeredCount}{" "}
+          respondidas
+        </p>
         <p
           aria-live={lowTime ? "polite" : "off"}
           className={cn(
-            "font-heading text-3xl font-semibold tabular-nums",
+            "font-heading text-2xl font-semibold tabular-nums sm:text-3xl",
             lowTime ? "text-destructive" : "text-court",
           )}
         >
@@ -91,11 +101,11 @@ export function ExamRunner({
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8">
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-lg font-medium">{question.prompt}</p>
-          <QuestionStatusBadge status={question.status} />
-        </div>
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-8">
+        <QuestionPromptHeader
+          prompt={question.prompt}
+          status={question.status}
+        />
         <div className="mt-6 space-y-2">
           {question.options.map((option) => {
             const selected = question.selectedOptionIndex === option.index;
@@ -114,7 +124,7 @@ export function ExamRunner({
               >
                 <span
                   className={cn(
-                    "font-heading mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-sm font-semibold",
+                    "font-heading mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold sm:size-6",
                     selected
                       ? "border-court bg-court text-court-line"
                       : "border-border text-muted-foreground",
@@ -122,63 +132,70 @@ export function ExamRunner({
                 >
                   {OPTION_LETTERS[option.index]}
                 </span>
-                <span className="text-sm">{option.text}</span>
+                <span className="text-sm leading-relaxed">{option.text}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        <Button
-          variant="outline"
-          disabled={current === 0}
-          onClick={() => setCurrent((i) => i - 1)}
-        >
-          Anterior
-        </Button>
-        {current < questions.length - 1 ? (
-          <Button onClick={() => setCurrent((i) => i + 1)}>Seguinte</Button>
-        ) : confirmSubmit ? (
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
-              {answeredCount < questions.length
-                ? `${questions.length - answeredCount} por responder — contam como erradas.`
-                : "Entregar o exame?"}
-            </span>
-            <Button
-              disabled={isSubmitting}
-              onClick={() => startSubmit(() => submitExam(attemptId))}
+      <nav
+        aria-label="Navegação de perguntas"
+        className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0"
+      >
+        <div ref={paginationRef} className="flex w-max gap-1.5 sm:w-auto sm:flex-wrap">
+          {questions.map((q, index) => (
+            <button
+              key={q.attemptQuestionId}
+              type="button"
+              onClick={() => setCurrent(index)}
+              aria-label={`Pergunta ${index + 1}`}
+              aria-current={index === current}
+              className={cn(
+                "size-9 shrink-0 rounded-md border text-xs font-medium tabular-nums transition-colors sm:size-8",
+                index === current
+                  ? "border-court bg-court text-court-line"
+                  : q.selectedOptionIndex !== null
+                    ? "border-court/40 bg-court/10 text-court"
+                    : "border-border text-muted-foreground hover:border-court/40",
+              )}
             >
-              {isSubmitting ? "A entregar..." : "Confirmar entrega"}
-            </Button>
-          </div>
-        ) : (
-          <Button onClick={() => setConfirmSubmit(true)}>Entregar exame</Button>
-        )}
-      </div>
-
-      <nav aria-label="Navegação de perguntas" className="flex flex-wrap gap-1.5">
-        {questions.map((q, index) => (
-          <button
-            key={q.attemptQuestionId}
-            type="button"
-            onClick={() => setCurrent(index)}
-            aria-label={`Pergunta ${index + 1}`}
-            aria-current={index === current}
-            className={cn(
-              "size-8 rounded-md border text-xs font-medium tabular-nums transition-colors",
-              index === current
-                ? "border-court bg-court text-court-line"
-                : q.selectedOptionIndex !== null
-                  ? "border-court/40 bg-court/10 text-court"
-                  : "border-border text-muted-foreground hover:border-court/40",
-            )}
-          >
-            {index + 1}
-          </button>
-        ))}
+              {index + 1}
+            </button>
+          ))}
+        </div>
       </nav>
+
+      <div className="sticky bottom-safe-nav z-40 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+        <div className="flex items-center justify-between gap-3">
+          <Button
+            variant="outline"
+            disabled={current === 0}
+            onClick={() => setCurrent((i) => i - 1)}
+          >
+            Anterior
+          </Button>
+          {current < questions.length - 1 ? (
+            <Button onClick={() => setCurrent((i) => i + 1)}>Seguinte</Button>
+          ) : confirmSubmit ? (
+            <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+              <span className="text-sm text-muted-foreground">
+                {answeredCount < questions.length
+                  ? `${questions.length - answeredCount} por responder — contam como erradas.`
+                  : "Entregar o exame?"}
+              </span>
+              <Button
+                disabled={isSubmitting}
+                onClick={() => startSubmit(() => submitExam(attemptId))}
+              >
+                {isSubmitting ? "A entregar..." : "Confirmar entrega"}
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={() => setConfirmSubmit(true)}>Entregar exame</Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

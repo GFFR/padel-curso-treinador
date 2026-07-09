@@ -39,9 +39,9 @@ export default async function DashboardPage() {
   const startFullExam = startExam.bind(null, "full_materials");
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8 sm:space-y-12">
       <section>
-        <h1 className="font-heading text-5xl font-bold uppercase">
+        <h1 className="font-heading text-3xl font-bold uppercase sm:text-5xl">
           O teu treino<span className="text-ball">.</span>
         </h1>
         <p className="mt-2 max-w-xl text-muted-foreground">

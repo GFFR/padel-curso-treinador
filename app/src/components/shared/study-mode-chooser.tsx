@@ -31,13 +31,13 @@ export function StudyModeChooser(props: StudyModeChooserProps) {
       </h3>
       <div className="mt-4 overflow-hidden rounded-xl border-2 border-court-line/90 bg-court shadow-lg">
         <div className="grid sm:grid-cols-2">
-          <div className="group relative border-b-2 border-court-line/90 p-8 transition-colors hover:bg-court-deep/20 focus-within:bg-court-deep/20 sm:border-r-2 sm:border-b-0">
+          <div className="group relative border-b-2 border-court-line/90 p-5 transition-colors hover:bg-court-deep/20 focus-within:bg-court-deep/20 sm:border-r-2 sm:border-b-0 sm:p-8">
             <Timer
               aria-hidden="true"
               className="mb-3 size-5 text-court-line/60"
               strokeWidth={1.75}
             />
-            <h2 className="font-heading text-3xl font-semibold text-court-line uppercase sm:text-4xl">
+            <h2 className="font-heading text-2xl font-semibold text-court-line uppercase sm:text-4xl">
               Simular exame
             </h2>
             <p className="mt-2 max-w-xs text-sm text-court-line/80">
@@ -76,13 +76,13 @@ export function StudyModeChooser(props: StudyModeChooserProps) {
             )}
           </div>
 
-          <div className="group relative p-8 transition-colors hover:bg-court-deep/20 focus-within:bg-court-deep/20">
+          <div className="group relative p-5 transition-colors hover:bg-court-deep/20 focus-within:bg-court-deep/20 sm:p-8">
             <Layers
               aria-hidden="true"
               className="mb-3 size-5 text-court-line/60"
               strokeWidth={1.75}
             />
-            <h2 className="font-heading text-3xl font-semibold text-court-line uppercase sm:text-4xl">
+            <h2 className="font-heading text-2xl font-semibold text-court-line uppercase sm:text-4xl">
               Praticar por tema
             </h2>
             <p className="mt-2 max-w-xs text-sm text-court-line/80">
