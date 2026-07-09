@@ -46,9 +46,10 @@ function mapLeaderboardRow(row: LeaderboardRow): ExamLeaderboardEntry {
   };
 }
 
+/** Pass `null` to fetch every ranked player (best qualifying attempt each). */
 export async function fetchExamLeaderboard(
   supabase: SupabaseClient,
-  limit = EXAM_LEADERBOARD_SIZE,
+  limit: number | null = EXAM_LEADERBOARD_SIZE,
 ): Promise<ExamLeaderboardEntry[]> {
   const { data, error } = await supabase.rpc("get_exam_leaderboard", {
     p_limit: limit,

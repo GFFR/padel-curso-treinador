@@ -6,7 +6,7 @@ import { ExamLeaderboard } from "@/components/shared/exam-leaderboard";
 import { StudyModeChooser } from "@/components/shared/study-mode-chooser";
 import { requireStudent } from "@/lib/auth";
 import { startExam } from "@/lib/actions/exam-actions";
-import { fetchExamLeaderboard } from "@/lib/exam-leaderboard";
+import { fetchExamLeaderboard, EXAM_LEADERBOARD_SIZE } from "@/lib/exam-leaderboard";
 
 export const metadata: Metadata = {
   title: "Início — Padel Grau I",
@@ -25,7 +25,9 @@ interface AttemptRow {
 export default async function DashboardPage() {
   const { supabase, studentId } = await requireStudent();
 
-  const leaderboard = await fetchExamLeaderboard(supabase);
+  const leaderboardRows = await fetchExamLeaderboard(supabase, EXAM_LEADERBOARD_SIZE + 1);
+  const hasMoreLeaderboard = leaderboardRows.length > EXAM_LEADERBOARD_SIZE;
+  const leaderboard = leaderboardRows.slice(0, EXAM_LEADERBOARD_SIZE);
 
   const { data: attempts } = await supabase
     .from("exam_attempts")
@@ -56,7 +58,11 @@ export default async function DashboardPage() {
         startExamAction={startFullExam}
       />
 
-      <ExamLeaderboard entries={leaderboard} currentStudentId={studentId} />
+      <ExamLeaderboard
+        entries={leaderboard}
+        currentStudentId={studentId}
+        hasMore={hasMoreLeaderboard}
+      />
 
       <section aria-label="Histórico">
         <h3 className="text-xs font-medium tracking-widest text-muted-foreground uppercase">

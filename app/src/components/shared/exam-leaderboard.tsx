@@ -1,4 +1,5 @@
-import { Trophy } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, Trophy } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -185,13 +186,25 @@ function ListRow({
 export function ExamLeaderboard({
   entries,
   currentStudentId,
+  variant = "preview",
+  hasMore = false,
 }: {
   entries: ExamLeaderboardEntry[];
   currentStudentId: string;
+  variant?: "preview" | "full";
+  hasMore?: boolean;
 }) {
   const byRank = new Map(entries.map((entry) => [entry.rank, entry]));
   const podiumEntries = PODIUM_ORDER.map((rank) => byRank.get(rank));
   const listEntries = entries.filter((entry) => entry.rank > 3);
+  const isFull = variant === "full";
+
+  const subtitle = isFull
+    ? "Todos os alunos com simulação concluída e mais de 90% das perguntas respondidas."
+    : "Top 5 simulações concluídas com mais de 90% das perguntas respondidas.";
+
+  const emptyMessage =
+    "Ainda não há alunos classificados. Completa um exame com pelo menos 90% das perguntas respondidas para entrares na classificação.";
 
   return (
     <section
@@ -220,39 +233,43 @@ export function ExamLeaderboard({
             <div className="flex items-center gap-2">
               <Trophy className="size-5 text-ball" aria-hidden />
               <h2 className="font-heading text-2xl font-bold tracking-wide text-court-line uppercase sm:text-3xl">
-                Quadro de Honra
+                {isFull ? "Classificação completa" : "Quadro de Honra"}
               </h2>
             </div>
-            <p className="mt-1 max-w-md text-sm text-court-line/60">
-              Top 5 simulações concluídas com mais de 90% das perguntas respondidas.
-            </p>
+            <p className="mt-1 max-w-md text-sm text-court-line/60">{subtitle}</p>
           </div>
           <div className="hidden rounded-lg border border-court-line/15 bg-court/20 px-3 py-2 text-right sm:block">
             <p className="text-[10px] tracking-widest text-court-line/50 uppercase">Escala</p>
             <p className="font-heading text-lg font-bold text-ball">0–20</p>
+            {isFull && entries.length > 0 ? (
+              <p className="mt-0.5 text-[10px] text-court-line/50">
+                {entries.length} {entries.length === 1 ? "aluno" : "alunos"}
+              </p>
+            ) : null}
           </div>
         </div>
 
         {entries.length === 0 ? (
           <p className="mt-8 rounded-xl border border-dashed border-court-line/20 bg-court/10 px-4 py-8 text-center text-sm text-court-line/60">
-            Ainda não há simulações qualificadas no quadro. Completa um exame com pelo
-            menos 90% das perguntas respondidas para entrares na classificação.
+            {emptyMessage}
           </p>
         ) : (
           <>
-            <div className="mt-8 flex items-end justify-center gap-2 sm:gap-4">
-              {podiumEntries.map((entry, index) => (
-                <PodiumSlot
-                  key={entry?.attemptId ?? `empty-${index}`}
-                  entry={entry}
-                  currentStudentId={currentStudentId}
-                />
-              ))}
-            </div>
+            {entries.length >= 3 ? (
+              <div className="mt-8 flex items-end justify-center gap-2 sm:gap-4">
+                {podiumEntries.map((entry, index) => (
+                  <PodiumSlot
+                    key={entry?.attemptId ?? `empty-${index}`}
+                    entry={entry}
+                    currentStudentId={currentStudentId}
+                  />
+                ))}
+              </div>
+            ) : null}
 
-            {listEntries.length > 0 ? (
-              <ul className="mt-6 space-y-2">
-                {listEntries.map((entry) => (
+            {(listEntries.length > 0 || entries.length < 3) ? (
+              <ul className={cn("space-y-2", entries.length >= 3 ? "mt-6" : "mt-8")}>
+                {(entries.length < 3 ? entries : listEntries).map((entry) => (
                   <ListRow
                     key={entry.attemptId}
                     entry={entry}
@@ -260,6 +277,21 @@ export function ExamLeaderboard({
                   />
                 ))}
               </ul>
+            ) : null}
+
+            {!isFull && hasMore ? (
+              <div className="mt-6 border-t border-court-line/15 pt-4">
+                <Link
+                  href="/painel/classificacao"
+                  className="group flex w-full items-center justify-center gap-2 rounded-xl border border-court-line/20 bg-court/20 px-4 py-3 text-sm font-medium text-court-line transition-colors hover:border-ball/40 hover:bg-ball/10 hover:text-ball"
+                >
+                  Ver mais
+                  <ChevronRight
+                    className="size-4 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden
+                  />
+                </Link>
+              </div>
             ) : null}
           </>
         )}
