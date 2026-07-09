@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { ExamLeaderboard } from "@/components/shared/exam-leaderboard";
 import { StudyModeChooser } from "@/components/shared/study-mode-chooser";
 import { requireStudent } from "@/lib/auth";
 import { startExam } from "@/lib/actions/exam-actions";
+import { fetchExamLeaderboard } from "@/lib/exam-leaderboard";
 
 export const metadata: Metadata = {
   title: "Início — Padel Grau I",
@@ -22,6 +24,8 @@ interface AttemptRow {
 
 export default async function DashboardPage() {
   const { supabase, studentId } = await requireStudent();
+
+  const leaderboard = await fetchExamLeaderboard(supabase);
 
   const { data: attempts } = await supabase
     .from("exam_attempts")
@@ -51,6 +55,8 @@ export default async function DashboardPage() {
         variant="student"
         startExamAction={startFullExam}
       />
+
+      <ExamLeaderboard entries={leaderboard} currentStudentId={studentId} />
 
       <section aria-label="Histórico">
         <h3 className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
