@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { answerQuestion, submitExam } from "@/lib/actions/exam-actions";
 import { cn } from "@/lib/utils";
+import { themeName } from "@/lib/domain/types";
 import { OPTION_LETTERS, type RunnerQuestion } from "./types";
 import { QuestionPromptHeader } from "./question-prompt-header";
 
@@ -103,6 +104,7 @@ export function ExamRunner({
 
       <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-8">
         <QuestionPromptHeader
+          themeName={themeName(question.themeCode)}
           prompt={question.prompt}
           status={question.status}
         />

@@ -10,7 +10,7 @@ export const THEME_CODES = [
 
 export type ThemeCode = (typeof THEME_CODES)[number];
 
-/** UI display names; FCH_DOPING renders with the hyphenated label from the brief. */
+/** Short codes for compact UI (results breakdown, admin tables). */
 export const THEME_LABELS: Record<ThemeCode, string> = {
   PDD: "PDD",
   TMTD: "TMTD",
@@ -19,6 +19,20 @@ export const THEME_LABELS: Record<ThemeCode, string> = {
   ED: "ED",
   DA: "DA",
 };
+
+/** Full course theme names (seed.sql / course-material-map). */
+export const THEME_NAMES: Record<ThemeCode, string> = {
+  PDD: "Pedagogia e Didática do Desporto",
+  TMTD: "Teoria e Metodologia do Treino Desportivo",
+  FCH: "Funcionamento do Corpo Humano",
+  FCH_DOPING: "Luta contra a Dopagem",
+  ED: "Ética no Desporto",
+  DA: "Desporto Adaptado",
+};
+
+export function themeName(code: string): string {
+  return THEME_NAMES[code as ThemeCode] ?? code;
+}
 
 export const SOURCE_SCOPES = ["presentations_only", "full_materials"] as const;
 
